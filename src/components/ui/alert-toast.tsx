@@ -103,10 +103,11 @@ export interface AlertToastProps
   title: string;
   description: string;
   onClose: () => void;
+  action?: React.ReactNode;
 }
 
 const AlertToast = React.forwardRef<HTMLDivElement, AlertToastProps>(
-  ({ className, variant = 'info', styleVariant = 'default', title, description, onClose, ...props }, ref) => {
+  ({ className, variant = 'info', styleVariant = 'default', title, description, onClose, action, ...props }, ref) => {
     const safeVariant = variant || 'info';
     const Icon = iconMap[safeVariant];
 
@@ -130,9 +131,10 @@ const AlertToast = React.forwardRef<HTMLDivElement, AlertToastProps>(
           <Icon className={cn("h-6 w-6", iconColorClasses[styleVariant || 'default'][safeVariant])} aria-hidden="true" />
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 text-left">
           <p className="text-sm font-semibold">{title}</p>
           <p className="text-sm opacity-90">{description}</p>
+          {action && <div className="mt-2">{action}</div>}
         </div>
 
         <div className="flex-shrink-0">

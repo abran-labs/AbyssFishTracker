@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Quicksand } from "next/font/google";
+import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const quicksand = Quicksand({
+  variable: "--font-quicksand",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Next.js App",
-  description: "Clean Slate",
+  title: "Abyss-Fish-Tracker",
+  description: "Fish value calculator and pond optimizer for ABYSS",
 };
 
 export default function RootLayout({
@@ -18,9 +19,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} antialiased`}>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${quicksand.variable} font-sans antialiased select-none relative bg-black text-white`}
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

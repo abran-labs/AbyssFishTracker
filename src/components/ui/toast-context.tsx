@@ -6,10 +6,11 @@ import { AnimatePresence } from "framer-motion";
 
 type ToastMessage = Omit<AlertToastProps, "onClose"> & {
     id: string;
+    action?: React.ReactNode;
 };
 
 interface ToastContextType {
-    addToast: (toast: Omit<ToastMessage, "id">) => void;
+    addToast: (toast: Omit<ToastMessage, "id">) => string;
     removeToast: (id: string) => void;
 }
 
@@ -25,6 +26,8 @@ export const ToastProvider = ({ children }: { children: React.ReactNode }) => {
         setTimeout(() => {
             setToasts((prev) => prev.filter((t) => t.id !== id));
         }, 5000);
+
+        return id;
     }, []);
 
     const removeToast = useCallback((id: string) => {

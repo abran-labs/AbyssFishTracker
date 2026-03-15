@@ -8,6 +8,9 @@ export interface ComboboxOption {
   value: string;
   label: string;
   description?: string;
+  color?: string;
+  group?: string;
+  groupColor?: string;
 }
 
 export interface ComboboxProps {
@@ -20,6 +23,8 @@ export interface ComboboxProps {
   disabled?: boolean;
   error?: boolean;
   errorMessage?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function Combobox({
@@ -32,9 +37,20 @@ export function Combobox({
   disabled = false,
   error = false,
   errorMessage,
+  open: controlledOpen,
+  onOpenChange,
 }: ComboboxProps) {
-  const [open, setOpen] = React.useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+  const open = controlledOpen ?? uncontrolledOpen;
+  const setOpen = React.useCallback(
+    (value: boolean) => {
+      setUncontrolledOpen(value);
+      onOpenChange?.(value);
+    },
+    [onOpenChange]
+  );
   const [search, setSearch] = React.useState("");
+  const [collapsedGroups, setCollapsedGroups] = React.useState<Set<string>>(new Set());
   const containerRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -50,9 +66,29 @@ export function Combobox({
     );
   }, [options, search]);
 
+  const toggleGroup = (group: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
+  };
+
+  const visible = React.useMemo(() => {
+    if (search) return filtered;
+    return filtered.filter(
+      (opt) => !opt.group || !collapsedGroups.has(opt.group)
+    );
+  }, [filtered, search, collapsedGroups]);
+
   // Close on outside click
+  const openRef = React.useRef(open);
+  openRef.current = open;
+
   React.useEffect(() => {
     const handleClick = (e: MouseEvent) => {
+      if (!openRef.current) return;
       if (
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
@@ -83,7 +119,7 @@ export function Combobox({
 
   React.useEffect(() => {
     setHighlightIndex(0);
-  }, [filtered]);
+  }, [visible]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!open) {
@@ -98,19 +134,19 @@ export function Combobox({
       case "ArrowDown":
         e.preventDefault();
         setHighlightIndex((prev) =>
-          prev < filtered.length - 1 ? prev + 1 : 0
+          prev < visible.length - 1 ? prev + 1 : 0
         );
         break;
       case "ArrowUp":
         e.preventDefault();
         setHighlightIndex((prev) =>
-          prev > 0 ? prev - 1 : filtered.length - 1
+          prev > 0 ? prev - 1 : visible.length - 1
         );
         break;
       case "Enter":
         e.preventDefault();
-        if (filtered[highlightIndex]) {
-          handleSelect(filtered[highlightIndex].value);
+        if (visible[highlightIndex]) {
+          handleSelect(visible[highlightIndex].value);
         }
         break;
       case "Escape":
@@ -136,10 +172,14 @@ export function Combobox({
           error
             ? "border-red-500 focus:ring-red-500"
             : "border-input",
+          open && "ring-1 ring-ring",
           !selected && "text-muted-foreground"
         )}
       >
-        <span className="truncate">
+        <span
+          className="truncate"
+          style={selected?.color ? { color: selected.color } : undefined}
+        >
           {selected ? selected.label : placeholder}
         </span>
         <ChevronDown
@@ -179,33 +219,68 @@ export function Combobox({
                 No results found
               </div>
             ) : (
-              filtered.map((option, index) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => handleSelect(option.value)}
-                  onMouseEnter={() => setHighlightIndex(index)}
-                  className={cn(
-                    "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none transition-colors",
-                    index === highlightIndex && "bg-accent text-accent-foreground",
-                    option.value === value && "font-medium"
-                  )}
-                >
-                  <div className="flex flex-col">
-                    <span>{option.label}</span>
-                    {option.description && (
-                      <span className="text-xs text-muted-foreground">
-                        {option.description}
-                      </span>
-                    )}
-                  </div>
-                  {option.value === value && (
-                    <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
-                      <Check className="h-4 w-4" />
-                    </span>
-                  )}
-                </button>
-              ))
+              (() => {
+                let visibleIndex = 0;
+                let prevGroup: string | undefined;
+                return filtered.map((option) => {
+                  const showGroupHeader = option.group && option.group !== prevGroup;
+                  const isNewGroup = showGroupHeader;
+                  if (isNewGroup) prevGroup = option.group;
+                  const collapsed = !search && option.group && collapsedGroups.has(option.group);
+                  const currentIndex = collapsed ? -1 : visibleIndex++;
+                  return (
+                    <React.Fragment key={`${option.group ?? ""}-${option.value}`}>
+                      {showGroupHeader && (
+                        <button
+                          type="button"
+                          onClick={() => option.group && toggleGroup(option.group)}
+                          className={cn(
+                            "flex w-full items-center justify-between px-2 py-1.5 text-xs font-semibold text-muted-foreground cursor-pointer hover:bg-accent/50 rounded-sm",
+                            filtered.indexOf(option) > 0 && "mt-1 border-t pt-2"
+                          )}
+                          style={option.groupColor ? { color: option.groupColor } : undefined}
+                        >
+                          {option.group}
+                          <ChevronDown
+                            className={cn(
+                              "h-3 w-3 transition-transform",
+                              collapsed && "-rotate-90"
+                            )}
+                          />
+                        </button>
+                      )}
+                      {!collapsed && (
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(option.value)}
+                          onMouseEnter={() => setHighlightIndex(currentIndex)}
+                          className={cn(
+                            "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-2 pr-8 text-sm outline-none transition-colors",
+                            currentIndex === highlightIndex && "bg-accent text-accent-foreground",
+                            option.value === value && "font-medium"
+                          )}
+                        >
+                          <div className="flex flex-col items-start">
+                            <span style={option.color ? { color: option.color } : undefined}>
+                              {option.label}
+                            </span>
+                            {option.description && (
+                              <span className="text-xs text-muted-foreground">
+                                {option.description}
+                              </span>
+                            )}
+                          </div>
+                          {option.value === value && (
+                            <span className="absolute right-2 flex h-3.5 w-3.5 items-center justify-center">
+                              <Check className="h-4 w-4" />
+                            </span>
+                          )}
+                        </button>
+                      )}
+                    </React.Fragment>
+                  );
+                });
+              })()
             )}
           </div>
         </div>
