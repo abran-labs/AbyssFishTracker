@@ -39,6 +39,3 @@ export interface FishEntry {
   updatedAt: string;
 }
 
-export interface PondSettings {
-  size: number;
-}

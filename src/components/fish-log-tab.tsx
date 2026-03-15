@@ -53,7 +53,6 @@ const mutationMultiplierMap = new Map(
 
 interface FishLogTabProps {
   entries: FishEntry[];
-  pondSize: number;
   onAdd: (
     data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">
   ) => FishEntry | Promise<FishEntry>;
@@ -103,9 +102,10 @@ function SortableHead({
   );
 }
 
+const MAX_POND = 18;
+
 export function FishLogTab({
   entries,
-  pondSize,
   onAdd,
   onUpdate,
   onDelete,
@@ -202,10 +202,10 @@ export function FishLogTab({
       const allSorted = [...entries, newEntry].sort(
         (a, b) => b.value - a.value
       );
-      const pondFish = allSorted.slice(0, pondSize);
+      const pondFish = allSorted.slice(0, MAX_POND);
 
       if (pondFish.some((f) => f.id === newEntry.id)) {
-        const replaced = allSorted[pondSize];
+        const replaced = allSorted[MAX_POND];
         if (replaced) {
           addToast({
             variant: "info",

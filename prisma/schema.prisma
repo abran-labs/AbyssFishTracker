@@ -14,7 +14,7 @@ model User {
   updatedAt DateTime @updatedAt
 
   entries      FishEntry[]
-  pondSettings PondSettings?
+  pondSnapshot PondSnapshot?
 }
 
 model FishEntry {
@@ -34,9 +34,11 @@ model FishEntry {
   @@index([userId])
 }
 
-model PondSettings {
-  id   String @id @default(cuid())
-  size Int    @default(6)
+model PondSnapshot {
+  id        String   @id @default(cuid())
+  fishIds   String[] // ordered list of fish IDs in the acknowledged pond
+  pondSize  Int      @default(6)
+  createdAt DateTime @default(now())
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

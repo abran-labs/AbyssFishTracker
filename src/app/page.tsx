@@ -11,8 +11,10 @@ import {
   addServerEntry,
   updateServerEntry,
   deleteServerEntry,
-  getServerPondSize,
+  getServerPondSnapshot,
+  saveServerPondSnapshot,
   saveServerPondSize,
+  type PondSnapshotData,
 } from "@/lib/fish-actions";
 import { useAuth } from "@/components/auth-context";
 import { LoginModal } from "@/components/login-modal";
@@ -23,7 +25,7 @@ import { FooterSection } from "@/components/footer-section";
 export default function Home() {
   const { user, loading, logout } = useAuth();
   const [entries, setEntries] = React.useState<FishEntry[]>([]);
-  const [pondSize, setPondSize] = React.useState(6);
+  const [pondSnapshot, setPondSnapshot] = React.useState<PondSnapshotData | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("calculator");
   const [showLogin, setShowLogin] = React.useState(false);
@@ -32,10 +34,10 @@ export default function Home() {
     if (loading) return;
 
     if (user) {
-      Promise.all([getServerEntries(), getServerPondSize()]).then(
-        ([serverEntries, serverPondSize]) => {
+      Promise.all([getServerEntries(), getServerPondSnapshot()]).then(
+        ([serverEntries, serverSnapshot]) => {
           setEntries(serverEntries);
-          setPondSize(serverPondSize);
+          setPondSnapshot(serverSnapshot);
           setMounted(true);
         }
       );
@@ -75,9 +77,14 @@ export default function Home() {
     setEntries((prev) => [restored, ...prev]);
   }, []);
 
+  const handleUpdatePondSnapshot = React.useCallback(async (fishIds: string[], pondSize: number) => {
+    const snapshot = await saveServerPondSnapshot(fishIds, pondSize);
+    setPondSnapshot(snapshot);
+  }, []);
+
   const handlePondSizeChange = React.useCallback(async (size: number) => {
-    await saveServerPondSize(size);
-    setPondSize(size);
+    const snapshot = await saveServerPondSize(size);
+    setPondSnapshot(snapshot);
   }, []);
 
   if (!mounted || loading) return null;
@@ -125,7 +132,6 @@ export default function Home() {
             {user ? (
               <FishLogTab
                 entries={entries}
-                pondSize={pondSize}
                 onAdd={handleAddEntry}
                 onUpdate={handleUpdateEntry}
                 onDelete={handleDeleteEntry}
@@ -147,7 +153,8 @@ export default function Home() {
             {user ? (
               <FishPondTab
                 entries={entries}
-                pondSize={pondSize}
+                snapshot={pondSnapshot}
+                onUpdateSnapshot={handleUpdatePondSnapshot}
                 onPondSizeChange={handlePondSizeChange}
                 isActive={activeTab === "pond"}
               />

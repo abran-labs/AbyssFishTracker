@@ -48,11 +48,6 @@ export async function POST(request: Request) {
       user = await prisma.user.create({
         data: { email: normalizedEmail },
       });
-
-      // Create default pond settings for new user
-      await prisma.pondSettings.create({
-        data: { userId: user.id, size: 6 },
-      });
     }
 
     // Create session

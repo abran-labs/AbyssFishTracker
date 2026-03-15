@@ -99,19 +99,54 @@ export async function deleteServerEntry(id: string): Promise<void> {
   await prisma.fishEntry.delete({ where: { id } });
 }
 
-export async function getServerPondSize(): Promise<number> {
-  const { userId } = await requireUser();
-  const settings = await prisma.pondSettings.findUnique({
-    where: { userId },
-  });
-  return settings?.size ?? 6;
+export interface PondSnapshotData {
+  fishIds: string[];
+  pondSize: number;
+  createdAt: string;
 }
 
-export async function saveServerPondSize(size: number): Promise<void> {
+export async function getServerPondSnapshot(): Promise<PondSnapshotData | null> {
   const { userId } = await requireUser();
-  await prisma.pondSettings.upsert({
+  const snapshot = await prisma.pondSnapshot.findUnique({
     where: { userId },
-    update: { size },
-    create: { userId, size },
   });
+  if (!snapshot) return null;
+  return {
+    fishIds: snapshot.fishIds,
+    pondSize: snapshot.pondSize,
+    createdAt: snapshot.createdAt.toISOString(),
+  };
+}
+
+export async function saveServerPondSnapshot(
+  fishIds: string[],
+  pondSize: number
+): Promise<PondSnapshotData> {
+  const { userId } = await requireUser();
+  const snapshot = await prisma.pondSnapshot.upsert({
+    where: { userId },
+    update: { fishIds, pondSize, createdAt: new Date() },
+    create: { userId, fishIds, pondSize },
+  });
+  return {
+    fishIds: snapshot.fishIds,
+    pondSize: snapshot.pondSize,
+    createdAt: snapshot.createdAt.toISOString(),
+  };
+}
+
+export async function saveServerPondSize(
+  pondSize: number
+): Promise<PondSnapshotData> {
+  const { userId } = await requireUser();
+  const snapshot = await prisma.pondSnapshot.upsert({
+    where: { userId },
+    update: { pondSize },
+    create: { userId, fishIds: [], pondSize },
+  });
+  return {
+    fishIds: snapshot.fishIds,
+    pondSize: snapshot.pondSize,
+    createdAt: snapshot.createdAt.toISOString(),
+  };
 }
