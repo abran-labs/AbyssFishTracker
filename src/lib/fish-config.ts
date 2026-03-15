@@ -42,7 +42,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   { name: "Bigmouthfish", rarity: "Legendary", baseValue: 76, minWeight: 16, maxWeight: 84, areas: ["Ancient Sands"] },
   { name: "Ancient Shark", rarity: "Legendary", baseValue: 50, minWeight: 72, maxWeight: 218.4, areas: ["Ancient Sands"] },
   { name: "Eyefish", rarity: "Legendary", baseValue: 160, minWeight: 16, maxWeight: 75.6, areas: ["Spirit Roots"] },
-  { name: "Sacabambaspis", rarity: "Legendary", baseValue: 150, minWeight: 0.0176, maxWeight: 70.56, areas: ["Sunken Wilds"] },
+  { name: "Sacabambaspis", rarity: "Legendary", baseValue: 150, minWeight: 17.6, maxWeight: 70.56, areas: ["Sunken Wilds"] },
 ];
 
 export const MUTATIONS: Mutation[] = [
