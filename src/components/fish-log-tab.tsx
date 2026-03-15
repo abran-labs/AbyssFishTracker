@@ -56,13 +56,13 @@ interface FishLogTabProps {
   pondSize: number;
   onAdd: (
     data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">
-  ) => FishEntry;
+  ) => FishEntry | Promise<FishEntry>;
   onUpdate: (
     id: string,
     data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">
-  ) => FishEntry;
-  onDelete: (id: string) => void;
-  onRestore: (entry: FishEntry) => void;
+  ) => FishEntry | Promise<FishEntry>;
+  onDelete: (id: string) => void | Promise<void>;
+  onRestore: (entry: FishEntry) => void | Promise<void>;
 }
 
 function SortableHead({
@@ -180,7 +180,7 @@ export function FishLogTab({
     setModalOpen(true);
   };
 
-  const handleSubmit = (formData: FishFormData) => {
+  const handleSubmit = async (formData: FishFormData) => {
     const data = {
       fishName: formData.fishName,
       weight: formData.weight,
@@ -191,14 +191,14 @@ export function FishLogTab({
     };
 
     if (editingEntry) {
-      onUpdate(editingEntry.id, data);
+      await onUpdate(editingEntry.id, data);
       addToast({
         variant: "success",
         title: "Entry Updated",
         description: `${formData.fishName} has been updated.`,
       });
     } else {
-      const newEntry = onAdd(data);
+      const newEntry = await onAdd(data);
       const allSorted = [...entries, newEntry].sort(
         (a, b) => b.value - a.value
       );

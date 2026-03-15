@@ -31,8 +31,9 @@ const POND_SIZES = [6, 8, 10, 12, 14, 16, 18];
 interface FishPondTabProps {
   entries: FishEntry[];
   pondSize: number;
-  onPondSizeChange: (size: number) => void;
+  onPondSizeChange: (size: number) => void | Promise<void>;
   isActive: boolean;
+  isAuthenticated?: boolean;
 }
 
 export function FishPondTab({
@@ -40,6 +41,7 @@ export function FishPondTab({
   pondSize,
   onPondSizeChange,
   isActive,
+  isAuthenticated = false,
 }: FishPondTabProps) {
   const [prevRankings, setPrevRankings] = React.useState<
     Record<string, number>
@@ -48,6 +50,7 @@ export function FishPondTab({
   const [removedEntries, setRemovedEntries] = React.useState<FishEntry[]>([]);
 
   React.useEffect(() => {
+    if (isAuthenticated) return;
     setPrevRankings(getPrevRankings());
     // Seed snapshot if none exists so we have a baseline
     const existing = getPrevPondSnapshot();
@@ -58,7 +61,7 @@ export function FishPondTab({
         .slice(0, 18);
       if (initial.length > 0) savePrevPondSnapshot(initial);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Filter out dead fish (stars === 0), then sort by value descending
   const sorted = React.useMemo(
@@ -78,10 +81,11 @@ export function FishPondTab({
   }, [sorted]);
 
   React.useEffect(() => {
+    if (isAuthenticated) return;
     if (sorted.length > 0) {
       savePrevRankings(currentRankings);
     }
-  }, [currentRankings, sorted.length]);
+  }, [currentRankings, sorted.length, isAuthenticated]);
 
   const allValues = React.useMemo(
     () => sorted.map((e) => e.value),
@@ -98,6 +102,10 @@ export function FishPondTab({
   // Load previous snapshot when tab activates, save when it deactivates
   const prevIsActive = React.useRef(false);
   React.useEffect(() => {
+    if (isAuthenticated) {
+      prevIsActive.current = isActive;
+      return;
+    }
     if (isActive && !prevIsActive.current) {
       const snapshot = getPrevPondSnapshot();
       const snapshotIds = new Set(snapshot.map((e) => e.id));
@@ -114,7 +122,7 @@ export function FishPondTab({
       setRemovedEntries([]);
     }
     prevIsActive.current = isActive;
-  }, [isActive, allRanked]);
+  }, [isActive, allRanked, isAuthenticated]);
 
   const isNewToRanked = (id: string) =>
     prevPondIds.size > 0 && !prevPondIds.has(id);

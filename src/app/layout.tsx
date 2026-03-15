@@ -22,6 +22,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${quicksand.variable} font-sans antialiased select-none relative bg-black text-white`}
+        suppressHydrationWarning
       >
         <Providers>{children}</Providers>
       </body>
