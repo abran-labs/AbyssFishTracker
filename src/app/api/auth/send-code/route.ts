@@ -57,6 +57,30 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Failed to send email:", error);
+
+      if ("statusCode" in error && error.statusCode === 429) {
+        const name = "name" in error ? (error.name as string) : "";
+
+        if (name === "monthly_quota_exceeded") {
+          return NextResponse.json(
+            {
+              error:
+                "We've hit our login limit for the month. Please try again next month.",
+            },
+            { status: 429 }
+          );
+        }
+
+        // daily_quota_exceeded, rate_limit_exceeded, or any other 429
+        return NextResponse.json(
+          {
+            error:
+              "We've hit our login limit for today. Please try again tomorrow.",
+          },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
         { error: "Failed to send verification email" },
         { status: 500 }
