@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { FishForm, type FishFormData } from "@/components/fish-form";
+import { ImagePasteZone } from "@/components/image-paste-zone";
+import { type OcrResult } from "@/lib/ocr";
 import { type FishEntry } from "@/lib/types";
 import { MUTATIONS, getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, getOptimizationColor } from "@/lib/fish-config";
 import { Button } from "@/components/ui/button";
@@ -116,6 +118,12 @@ export function FishLogTab({
     null
   );
   const [formKey, setFormKey] = React.useState(0);
+  const [ocrData, setOcrData] = React.useState<{
+    fishName?: string;
+    weight?: number;
+    stars?: number;
+    mutation?: string;
+  } | undefined>(undefined);
   const [sortKey, setSortKey] = React.useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = React.useState<SortDir>("desc");
   const { addToast, removeToast } = useToast();
@@ -168,8 +176,19 @@ export function FishLogTab({
     });
   }, [entries, sortKey, sortDir, rankMap]);
 
+  const handleOcrResult = React.useCallback((result: OcrResult) => {
+    setOcrData({
+      fishName: result.fishName ?? undefined,
+      weight: result.weight ?? undefined,
+      stars: result.stars ?? undefined,
+      mutation: result.mutation ?? undefined,
+    });
+    setFormKey((k) => k + 1);
+  }, []);
+
   const openAdd = () => {
     setEditingEntry(null);
+    setOcrData(undefined);
     setFormKey((k) => k + 1);
     setModalOpen(true);
   };
@@ -364,17 +383,18 @@ export function FishLogTab({
                 <IconX className="h-4 w-4" />
               </Button>
             </div>
+            {!editingEntry && <ImagePasteZone onResult={handleOcrResult} />}
             <FishForm
               key={formKey}
               initialData={
                 editingEntry
                   ? {
-                      fishName: editingEntry.fishName,
-                      weight: editingEntry.weight,
-                      stars: editingEntry.stars,
-                      mutation: editingEntry.mutation,
-                    }
-                  : undefined
+                    fishName: editingEntry.fishName,
+                    weight: editingEntry.weight,
+                    stars: editingEntry.stars,
+                    mutation: editingEntry.mutation,
+                  }
+                  : ocrData
               }
               renderActions={(formData) => (
                 <>
