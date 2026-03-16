@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
+import { Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalculatorTab } from "@/components/calculator-tab";
 import { FishLogTab } from "@/components/fish-log-tab";
@@ -28,9 +30,20 @@ export default function Home() {
   const [pondSnapshot, setPondSnapshot] = React.useState<PondSnapshotData | null>(null);
   const [mounted, setMounted] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("calculator");
+  const [fishCount, setFishCount] = React.useState<number | null>(null);
+  const [userCount, setUserCount] = React.useState<number | null>(null);
   const [showLogin, setShowLogin] = React.useState(false);
 
   React.useEffect(() => {
+    // Fetch stats regardless of auth
+    Promise.all([
+      fetch("/api/stats?stat=fish").then((r) => r.json()),
+      fetch("/api/stats").then((r) => r.json()),
+    ]).then(([fishData, userData]) => {
+      setFishCount(Number(fishData.message));
+      setUserCount(Number(userData.message));
+    }).catch(() => { });
+
     if (loading) return;
 
     if (user) {
@@ -91,9 +104,17 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border/40 px-6 py-4">
-        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+      <header className="border-b border-border/40 px-4 lg:px-8 py-4">
+        <div className="w-full flex items-center justify-between">
           <h1 className="text-xl font-semibold">Abyss-Fish-Tracker</h1>
+
+          {fishCount !== null && userCount !== null && (
+            <div className="hidden sm:flex items-center gap-4 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{userCount} users</span>
+              <span className="text-border">·</span>
+              <span className="flex items-center gap-1.5"><Image src="/fish.png" alt="Fish" width={16} height={16} className="inline-block opacity-50" />{fishCount} fish logged</span>
+            </div>
+          )}
 
           {user ? (
             <div className="flex items-center gap-3">
