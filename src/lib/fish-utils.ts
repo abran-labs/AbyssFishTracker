@@ -5,9 +5,12 @@ export function calculateValue(
   weight: number,
   baseValue: number,
   starMultiplier: number,
-  mutationMultiplier: number
+  mutationMultiplier: number,
+  sizeMultiplier: number = 1
 ): number {
-  return Math.round(weight * baseValue * starMultiplier * mutationMultiplier);
+  const baseWeight = Math.round((weight / sizeMultiplier) * 10) / 10;
+  const correctedWeight = baseWeight * sizeMultiplier;
+  return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
 }
 
 export function calculateOptimization(

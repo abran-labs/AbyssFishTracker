@@ -114,9 +114,14 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
   const selectedStar = STAR_LEVELS.find((s) => s.value.toString() === stars);
   const selectedMutation = MUTATIONS.find((m) => m.name === mutation);
 
+  const sizeMult = selectedMutation?.sizeMultiplier ?? 1;
   const weightValidation =
     selectedFish && weightStr
-      ? validateWeight(weight, selectedFish.minWeight, selectedFish.maxWeight)
+      ? validateWeight(
+          weight,
+          Math.round(selectedFish.minWeight * sizeMult * 10) / 10,
+          Math.round(selectedFish.maxWeight * sizeMult * 10) / 10
+        )
       : null;
 
   const formData = React.useMemo<FishFormData | null>(() => {
@@ -132,7 +137,8 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
       weight,
       selectedFish.baseValue,
       selectedStar.multiplier,
-      selectedMutation.multiplier
+      selectedMutation.multiplier,
+      selectedMutation.sizeMultiplier
     );
     const optimization = calculateOptimization(value, selectedFish);
     return {
@@ -195,7 +201,7 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
           step="0.01"
           placeholder={
             selectedFish
-              ? `${selectedFish.minWeight} - ${selectedFish.maxWeight}`
+              ? `${Math.round(selectedFish.minWeight * sizeMult * 10) / 10} - ${Math.round(selectedFish.maxWeight * sizeMult * 10) / 10}`
               : "Select a fish first"
           }
           value={weightStr}
@@ -214,8 +220,8 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
         />
         {weightValidation && !weightValidation.valid && selectedFish && (
           <p className="text-sm text-destructive">
-            {selectedFish.name} weight must be between {selectedFish.minWeight}kg
-            - {selectedFish.maxWeight}kg
+            {selectedFish.name} weight must be between {Math.round(selectedFish.minWeight * sizeMult * 10) / 10}kg
+            - {Math.round(selectedFish.maxWeight * sizeMult * 10) / 10}kg
           </p>
         )}
       </div>

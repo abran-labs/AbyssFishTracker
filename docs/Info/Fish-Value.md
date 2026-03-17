@@ -3,7 +3,9 @@
 ## Price Formula
 
 ```
-Value = math.round(weight * basevalue * starMultiplier * mutationMultiplier)
+baseWeight = round(displayedWeight / sizeMultiplier, 1)
+correctedWeight = baseWeight * sizeMultiplier
+Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultiplier)
 ```
 
 ## Star Quality
@@ -61,31 +63,33 @@ Value = math.round(weight * basevalue * starMultiplier * mutationMultiplier)
 
 ## Mutations
 
-| Mutation    | Price Mult |
-|-------------|------------|
-| Poop        | 0.33x      |
-| Rock        | 1x         |
-| Moss        | 1.1x       |
-| Coral       | 1.1x       |
-| Metal       | 1.2x       |
-| Sand        | 1.25x      |
-| Albino      | 1.3x       |
-| Transparent | 1.35x      |
-| Cactus      | 1.45x      |
-| Banana      | 1.5x       |
-| Spirit      | 1.7x       |
-| Fossil      | 1.75x      |
-| Golden      | 2x         |
-| Negative    | 2x         |
-| Fairy       | 2.3x       |
-| Invisible   | 2.4x       |
-| Liquid      | 2.5x       |
-| Grounded    | 2.8x       |
-| Neon        | 2.8x       |
-| Ultraviolet | 3.6x       |
-| Rooted      | 3.6x       |
-| Toxic       | 3.75x      |
-| Jade        | 4x         |
-| Shadow      | 6.66x      |
-| Angelic     | 7.77x      |
-| Abyssal     | 8.5x       |
+| Mutation    | Price Mult | Size Mult |
+|-------------|------------|-----------|
+| Poop        | 0.33x      | 1.333x    |
+| Rock        | 1x         | 1.2x      |
+| Moss        | 1.1x       | 1x        |
+| Coral       | 1.1x       | 0.8x      |
+| Metal       | 1.2x       | 1.2x      |
+| Sand        | 1.25x      | 1x        |
+| Albino      | 1.3x       | 1x        |
+| Transparent | 1.35x      | 1x        |
+| Cactus      | 1.45x      | 1.3x      |
+| Banana      | 1.5x       | 1x        |
+| Spirit      | 1.7x       | 1.2x      |
+| Fossil      | 1.75x      | 0.9x      |
+| Golden      | 2x         | 1.2x      |
+| Negative    | 2x         | 1x        |
+| Fairy       | 2.3x       | 1.2x      |
+| Invisible   | 2.4x       | 1.4x      |
+| Liquid      | 2.5x       | 1.3x      |
+| Grounded    | 2.8x       | 1.2x      |
+| Neon        | 2.8x       | 1.2x      |
+| Ultraviolet | 3.6x       | 1.8x      |
+| Rooted      | 3.6x       | 1.5x      |
+| Toxic       | 3.75x      | 1.2x      |
+| Jade        | 4x         | 1x        |
+| Cupid       | 1.4x       | 1x        |
+| Lonely      | 2x         | 1x        |
+| Shadow      | 6.66x      | 1.11x     |
+| Angelic     | 7.77x      | 1.4x      |
+| Abyssal     | 8.5x       | 1.5x      |

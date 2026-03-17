@@ -18,6 +18,7 @@ export interface FishSpecies {
 export interface Mutation {
   name: string;
   multiplier: number;
+  sizeMultiplier: number;
   area?: FishArea;
 }
 
