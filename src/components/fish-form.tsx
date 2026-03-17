@@ -16,6 +16,7 @@ import {
   calculateOptimization,
   validateWeight,
 } from "@/lib/fish-utils";
+import { recordCalculation } from "@/lib/stat-tracker";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -151,6 +152,18 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
     selectedStar,
     selectedMutation,
     weightValidation,
+  ]);
+
+  // Track calculations optimistically
+  React.useEffect(() => {
+    if (formData) {
+      recordCalculation();
+    }
+  }, [
+    formData?.fishName,
+    formData?.weight,
+    formData?.stars,
+    formData?.mutation,
   ]);
 
   const reset = React.useCallback(() => {

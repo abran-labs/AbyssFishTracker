@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Users } from "lucide-react";
+import { Users, Calculator } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalculatorTab } from "@/components/calculator-tab";
 import { FishLogTab } from "@/components/fish-log-tab";
@@ -18,6 +18,7 @@ import {
   saveServerPondSize,
   type PondSnapshotData,
 } from "@/lib/fish-actions";
+import { subscribeToPendingCount, getPendingCount } from "@/lib/stat-tracker";
 import { useAuth } from "@/components/auth-context";
 import { LoginModal } from "@/components/login-modal";
 import { Button } from "@/components/ui/button";
@@ -32,16 +33,24 @@ export default function Home() {
   const [activeTab, setActiveTab] = React.useState("calculator");
   const [fishCount, setFishCount] = React.useState<number | null>(null);
   const [userCount, setUserCount] = React.useState<number | null>(null);
+  const [calculatedCount, setCalculatedCount] = React.useState<number | null>(null);
+  const [pendingCalculations, setPendingCalculations] = React.useState(0);
   const [showLogin, setShowLogin] = React.useState(false);
 
   React.useEffect(() => {
+    // Sync with local pending calculations for optimistic UI
+    setPendingCalculations(getPendingCount());
+    const unsubscribe = subscribeToPendingCount(setPendingCalculations);
+
     // Fetch stats regardless of auth
     Promise.all([
       fetch("/api/stats?stat=fish").then((r) => r.json()),
       fetch("/api/stats").then((r) => r.json()),
-    ]).then(([fishData, userData]) => {
+      fetch("/api/stats?stat=calculated").then((r) => r.json()),
+    ]).then(([fishData, userData, calculatedData]) => {
       setFishCount(Number(fishData.message));
       setUserCount(Number(userData.message));
+      setCalculatedCount(Number(calculatedData.message));
     }).catch(() => { });
 
     if (loading) return;
@@ -57,6 +66,8 @@ export default function Home() {
     } else {
       setMounted(true);
     }
+
+    return unsubscribe;
   }, [user, loading]);
 
   const handleAddEntry = React.useCallback(
@@ -108,11 +119,13 @@ export default function Home() {
         <div className="w-full flex items-center justify-between">
           <h1 className="text-xl font-semibold">Abyss-Fish-Tracker</h1>
 
-          {fishCount !== null && userCount !== null && (
+          {fishCount !== null && userCount !== null && calculatedCount !== null && (
             <div className="hidden sm:flex items-center gap-4 text-sm text-muted-foreground">
               <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{userCount} users</span>
               <span className="text-border">·</span>
               <span className="flex items-center gap-1.5"><Image src="/fish.png" alt="Fish" width={16} height={16} className="inline-block" style={{ filter: "brightness(0.65)" }} />{fishCount} fish logged</span>
+              <span className="text-border">·</span>
+              <span className="flex items-center gap-1.5"><Calculator className="h-4 w-4" />{(calculatedCount ?? 0) + pendingCalculations} fish calculated</span>
             </div>
           )}
 

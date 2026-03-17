@@ -85,7 +85,7 @@ Value = math.round(weight * basevalue * starMultiplier * mutationMultiplier)
 | Ultraviolet | 3.6x       |
 | Rooted      | 3.6x       |
 | Toxic       | 3.75x      |
-| Jade        | 4.6x       |
+| Jade        | 4x         |
 | Shadow      | 6.66x      |
 | Angelic     | 7.77x      |
 | Abyssal     | 8.5x       |

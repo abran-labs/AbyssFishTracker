@@ -54,3 +54,11 @@ model OtpCode {
 
   @@index([email, code])
 }
+
+model GlobalStat {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
+}
+

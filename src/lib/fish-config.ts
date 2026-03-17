@@ -69,7 +69,7 @@ export const MUTATIONS: Mutation[] = [
   { name: "Ultraviolet", multiplier: 3.6 },
   { name: "Rooted", multiplier: 3.6, area: "Spirit Roots" },
   { name: "Toxic", multiplier: 3.75 },
-  { name: "Jade", multiplier: 4.6, area: "Sunken Wilds" },
+  { name: "Jade", multiplier: 4, area: "Sunken Wilds" },
   { name: "Shadow", multiplier: 6.66 },
   { name: "Angelic", multiplier: 7.77 },
   { name: "Abyssal", multiplier: 8.5 },
