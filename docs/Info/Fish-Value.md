@@ -1,6 +1,6 @@
 # Fish Value System
 
-## Price Formula
+## Fish Price Formula
 
 ```
 baseWeight = round(displayedWeight / sizeMultiplier, 1)
@@ -8,10 +8,19 @@ correctedWeight = baseWeight * sizeMultiplier
 Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultiplier)
 ```
 
+## Roe $/hr Formula
+
+```
+mutationFactor = hasMutation ? 0.5 : 1.0
+roePerHour = ceil(fishValue * 0.02 * mutationFactor) * (3600 / cycleTime)
+```
+
+Offline production runs at 50% rate.
+
 ## Star Quality
 
 | Stars | Multiplier |
-|-------|------------|
+| ----- | ---------- |
 | Dead  | 0.2x       |
 | 1     | 0.5x       |
 | 2     | 0.75x      |
@@ -21,7 +30,7 @@ Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultip
 ## Fish Data Table
 
 | Fish            | Rarity    | Base Value | Min Weight | Max Weight |
-|-----------------|-----------|------------|------------|------------|
+| --------------- | --------- | ---------- | ---------- | ---------- |
 | Blue Tang       | Common    | 14         | 0.32kg     | 1.68kg     |
 | Clownfish       | Common    | 12         | 0.8kg      | 3.36kg     |
 | Pufferfish      | Uncommon  | 13         | 1.6kg      | 6.72kg     |
@@ -37,7 +46,7 @@ Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultip
 | Cod             | Uncommon  | 18         | 3.2kg      | 20.16kg    |
 | Grouper         | Rare      | 28         | 4.8kg      | 23.52kg    |
 | Scorpionfish    | Rare      | 60         | 3.2kg      | 13.44kg    |
-| Blackfin Tuna   | Rare      | 60         | 4.8kg      | 26.88kg    |
+| Blackfin Tuna   | Uncommon  | 60         | 4.8kg      | 26.88kg    |
 | Cavefish        | Epic      | 22         | 24kg       | 134.4kg    |
 | Shark           | Epic      | 40         | 16kg       | 117.6kg    |
 | Bigmouthfish    | Legendary | 76         | 16kg       | 84kg       |
@@ -48,7 +57,7 @@ Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultip
 | Pacific Fanfish | Common    | 20         | 4kg        | 20.16kg    |
 | Napoleon        | Uncommon  | 20         | 8kg        | 42kg       |
 | Jellyfish       | Uncommon  | 35         | 3.2kg      | 16.8kg     |
-| Sailfish        | Legendary | 40         | 24kg       | 100.8kg    |
+| Sailfish        | Epic      | 40         | 24kg       | 100.8kg    |
 | Hammer Shark    | Epic      | 48         | 32kg       | 134.4kg    |
 | Eyefish         | Legendary | 160        | 16kg       | 75.6kg     |
 | Anglerfish      | Rare      | 35         | 24kg       | 100.8kg    |
@@ -58,13 +67,13 @@ Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultip
 | Sea Turtle      | Rare      | 20         | 48kg       | 142.8kg    |
 | Jaguar Shark    | Epic      | 50         | 56kg       | 184.8kg    |
 | Toucan Fish     | Epic      | 90         | 20kg       | 67.2kg     |
-| Sacabambaspis   | Legendary | 150        | 17.6g      | 70.56kg    |
+| Sacabambaspis   | Legendary | 150        | 17.6kg     | 70.56kg    |
 
 
 ## Mutations
 
 | Mutation    | Price Mult | Size Mult |
-|-------------|------------|-----------|
+| ----------- | ---------- | --------- |
 | Poop        | 0.33x      | 1.333x    |
 | Rock        | 1x         | 1.2x      |
 | Moss        | 1.1x       | 1x        |
@@ -93,3 +102,102 @@ Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultip
 | Shadow      | 6.66x      | 1.11x     |
 | Angelic     | 7.77x      | 1.4x      |
 | Abyssal     | 8.5x       | 1.5x      |
+
+
+## Cycle Times
+
+| Rarity    | Cycle |
+| --------- | ----- |
+| Common    | 60s   |
+| Uncommon  | 120s  |
+| Rare      | 240s  |
+| Epic      | 420s  |
+| Legendary | 600s  |
+| Mythical  | 900s  |
+
+
+## Fish Capacity
+
+| Level | Max Fish |
+| ----- | -------- |
+| 0     | 6        |
+| 1     | 8        |
+| 2     | 10       |
+| 3     | 12       |
+| 4     | 14       |
+| 5     | 16       |
+| 6     | 18       |
+
+
+## Roe Storage
+
+| Level | Capacity |
+| ----- | -------- |
+| 0     | 500 kg   |
+| 1     | 800 kg   |
+| 2     | 1500 kg  |
+| 3     | 2000 kg  |
+| 4     | 2750 kg  |
+| 5     | 3500 kg  |
+| 6     | 5500 kg  |
+
+
+## Decoration (Roe Speed)
+
+| Level | Roe Speed |
+| ----- | --------- |
+| 0     | +0%       |
+| 1     | +5%       |
+| 2     | +10%      |
+| 3     | +15%      |
+| 4     | +20%      |
+| 5     | +25%      |
+| 6     | +30%      |
+
+
+## Fish Feed
+
+| Feed         | Roe Speed | Duration |
+| ------------ | --------- | -------- |
+| Algae Feed   | +5%       | 15 min   |
+| Fish Feed    | +10%      | 20 min   |
+| Worm Feed    | +15%      | 30 min   |
+| Shrimp Feed  | +20%      | 45 min   |
+| Octapus Feed | +30%      | 60 min   |
+| Star Feed    | +40%      | 2 hr     |
+
+
+## Races
+
+| Race       | Cash Bonus |
+| ---------- | ---------- |
+| Spirit     | +8%        |
+| Anglerfish | +8%        |
+| Shark      | +10%       |
+| Kraken     | +15%       |
+| Sea Angel  | +15%       |
+
+
+## Artifacts
+
+Players can equip up to **3 artifacts** at a time.
+
+| Artifact           | Cash Bonus     | Limit |
+| ------------------ | -------------- | ----- |
+| The King's Fortune | +10%           | 1     |
+| Coins              | +1.25% - +1.4% | Any   |
+
+
+## Artifact Tiers
+
+| Tier           |
+| -------------- |
+| Tier I         |
+| Tier II        |
+| Tier III       |
+| Tier IV        |
+| Tier V         |
+| Tier VI        |
+| Tier VII       |
+
+---

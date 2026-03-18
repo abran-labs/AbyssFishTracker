@@ -21,6 +21,8 @@ import {
 import { subscribeToPendingCount, getPendingCount } from "@/lib/stat-tracker";
 import { useAuth } from "@/components/auth-context";
 import { LoginModal } from "@/components/login-modal";
+import { SettingsProvider } from "@/components/settings-context";
+import { GlobalSettingsBar } from "@/components/global-settings-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FooterSection } from "@/components/footer-section";
@@ -151,59 +153,73 @@ export default function Home() {
       </header>
 
       <main className="flex-1 px-6 py-6 max-w-5xl mx-auto w-full">
-        <Tabs defaultValue="calculator" onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="calculator">Calculator</TabsTrigger>
-            <TabsTrigger value="log">Fish Log</TabsTrigger>
-            <TabsTrigger value="pond">Fish Pond</TabsTrigger>
-          </TabsList>
+        <SettingsProvider isLoggedIn={!!user}>
+          <Tabs defaultValue="calculator" onValueChange={setActiveTab}>
+            <div className="flex flex-col gap-2 mb-3">
+              <TabsList className="self-start">
+                <TabsTrigger value="calculator">Calculator</TabsTrigger>
+                <TabsTrigger value="log">Fish Log</TabsTrigger>
+                <TabsTrigger value="pond">Fish Pond</TabsTrigger>
+              </TabsList>
+              <GlobalSettingsBar />
+            </div>
 
-          <TabsContent value="calculator">
-            <CalculatorTab />
-          </TabsContent>
+            <TabsContent value="calculator">
+              <CalculatorTab />
+              <p className="mt-6 text-sm text-muted-foreground text-center">
+                Sorry for the downtime earlier today — hope this update makes up for it!
+              </p>
+            </TabsContent>
 
-          <TabsContent value="log">
-            {user ? (
-              <FishLogTab
-                entries={entries}
-                onAdd={handleAddEntry}
-                onUpdate={handleUpdateEntry}
-                onDelete={handleDeleteEntry}
-                onRestore={handleRestoreEntry}
-              />
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center space-y-3">
-                  <p className="text-muted-foreground">
-                    You need to be logged in to use Fish Log.
-                  </p>
-                  <Button onClick={() => setShowLogin(true)}>Log in</Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
+            <TabsContent value="log">
+              {user ? (
+                <FishLogTab
+                  entries={entries}
+                  onAdd={handleAddEntry}
+                  onUpdate={handleUpdateEntry}
+                  onDelete={handleDeleteEntry}
+                  onRestore={handleRestoreEntry}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center space-y-4">
+                    <p className="text-lg font-medium">Fish Log</p>
+                    <ul className="text-left text-sm text-muted-foreground mx-auto space-y-1 w-fit">
+                      <li className="whitespace-nowrap">• Log every fish you catch</li>
+                      <li className="whitespace-nowrap">• Sort by value, roe $/hr, weight, and more</li>
+                      <li className="whitespace-nowrap">• Autofill catches from screenshots</li>
+                    </ul>
+                    <Button onClick={() => setShowLogin(true)}>Create Free Account</Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
 
-          <TabsContent value="pond">
-            {user ? (
-              <FishPondTab
-                entries={entries}
-                snapshot={pondSnapshot}
-                onUpdateSnapshot={handleUpdatePondSnapshot}
-                onPondSizeChange={handlePondSizeChange}
-                isActive={activeTab === "pond"}
-              />
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center space-y-3">
-                  <p className="text-muted-foreground">
-                    You need to be logged in to use Fish Pond.
-                  </p>
-                  <Button onClick={() => setShowLogin(true)}>Log in</Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="pond">
+              {user ? (
+                <FishPondTab
+                  entries={entries}
+                  snapshot={pondSnapshot}
+                  onUpdateSnapshot={handleUpdatePondSnapshot}
+                  onPondSizeChange={handlePondSizeChange}
+                  isActive={activeTab === "pond"}
+                />
+              ) : (
+                <Card>
+                  <CardContent className="py-12 text-center space-y-4">
+                    <p className="text-lg font-medium">Fish Pond</p>
+                    <ul className="text-left text-sm text-muted-foreground mx-auto space-y-1 w-fit">
+                      <li className="whitespace-nowrap">• Setup AFK sessions and get notified when to log back in</li>
+                      <li className="whitespace-nowrap">• Get optimal fish swap recommendations</li>
+                      <li className="whitespace-nowrap">• Calculate roe production</li>
+                    </ul>
+                    <Button onClick={() => setShowLogin(true)}>Create Free Account</Button>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
+        </SettingsProvider>
       </main>
 
       <FooterSection />

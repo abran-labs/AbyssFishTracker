@@ -5,7 +5,9 @@ import { FishForm, type FishFormData } from "@/components/fish-form";
 import { ImagePasteZone } from "@/components/image-paste-zone";
 import { type OcrResult } from "@/lib/ocr";
 import { type FishEntry } from "@/lib/types";
-import { MUTATIONS, getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, getOptimizationColor } from "@/lib/fish-config";
+import { MUTATIONS, FISH_SPECIES, getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, RACES, ARTIFACTS, DECORATION_LEVELS } from "@/lib/fish-config";
+import { calculateBaseRoePerHour } from "@/lib/fish-utils";
+import { useSettings } from "@/components/settings-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -34,7 +36,7 @@ type SortKey =
   | "stars"
   | "mutation"
   | "value"
-  | "optimization"
+  | "roePerHour"
   | "createdAt";
 type SortDir = "asc" | "desc";
 
@@ -45,7 +47,7 @@ const DEFAULT_DIR: Record<SortKey, SortDir> = {
   stars: "desc",
   mutation: "desc",
   value: "desc",
-  optimization: "desc",
+  roePerHour: "desc",
   createdAt: "desc",
 };
 
@@ -127,6 +129,29 @@ export function FishLogTab({
   const [sortKey, setSortKey] = React.useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = React.useState<SortDir>("desc");
   const { addToast, removeToast } = useToast();
+  const { race, artifact1, artifact2, artifact3, decorationLevel, roeStorageLevel } = useSettings();
+
+  const { cashBonus, speedBonus, boostMultiplier } = React.useMemo(() => {
+    const r = RACES.find((r) => r.name === race)?.cashBonus ?? 0;
+    const a1 = ARTIFACTS.find((a) => a.name === artifact1)?.cashBonus ?? 0;
+    const a2 = ARTIFACTS.find((a) => a.name === artifact2)?.cashBonus ?? 0;
+    const a3 = ARTIFACTS.find((a) => a.name === artifact3)?.cashBonus ?? 0;
+    const cash = r + a1 + a2 + a3;
+    const speed = DECORATION_LEVELS[decorationLevel]?.speedBonus ?? 0;
+    return {
+      cashBonus: cash,
+      speedBonus: speed,
+      boostMultiplier: (1 + cash) * (1 + speed),
+    };
+  }, [race, artifact1, artifact2, artifact3, decorationLevel]);
+
+  const valueLabel = cashBonus > 0.0005
+    ? `Value (+${(cashBonus * 100).toFixed(1)}%)`
+    : "Value";
+
+  const roeLabel = (cashBonus + speedBonus) > 0.0005
+    ? `Roe $/hr (+${((cashBonus + speedBonus) * 100).toFixed(1)}%)`
+    : "Roe $/hr";
 
   const handleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -141,6 +166,22 @@ export function FishLogTab({
     const sorted = [...entries].sort((a, b) => b.value - a.value);
     return new Map(sorted.map((e, i) => [e.id, i + 1]));
   }, [entries]);
+
+  // Compute roe $/hr for each entry (boosted by race/artifact cash + decoration speed)
+  const roeMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    for (const entry of entries) {
+      const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
+      if (fish) {
+        const hasMutation = entry.mutation !== "None";
+        const base = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
+        map.set(entry.id, Math.round(base * boostMultiplier));
+      } else {
+        map.set(entry.id, 0);
+      }
+    }
+    return map;
+  }, [entries, boostMultiplier]);
 
   const displayEntries = React.useMemo(() => {
     const mul = sortDir === "asc" ? 1 : -1;
@@ -162,8 +203,8 @@ export function FishLogTab({
           );
         case "value":
           return mul * (a.value - b.value);
-        case "optimization":
-          return mul * (a.optimization - b.optimization);
+        case "roePerHour":
+          return mul * ((roeMap.get(a.id) ?? 0) - (roeMap.get(b.id) ?? 0));
         case "createdAt":
           return (
             mul *
@@ -301,71 +342,73 @@ export function FishLogTab({
           </CardContent>
         </Card>
       ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableHead label="Rank" sortKey="rank" className="w-16" {...sortProps} />
-                <SortableHead label="Fish" sortKey="fishName" {...sortProps} />
-                <SortableHead label="Weight" sortKey="weight" {...sortProps} />
-                <SortableHead label="Stars" sortKey="stars" {...sortProps} />
-                <SortableHead label="Mutation" sortKey="mutation" {...sortProps} />
-                <SortableHead label="Value" sortKey="value" className="text-right" {...sortProps} />
-                <SortableHead label="Opt %" sortKey="optimization" className="text-right" {...sortProps} />
-                <SortableHead label="Date" sortKey="createdAt" {...sortProps} />
-                <TableHead className="w-24">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {displayEntries.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="font-medium" style={{ color: getRankColor(rankMap.get(entry.id) ?? 0) }}>
-                    #{rankMap.get(entry.id)}
-                  </TableCell>
-                  <TableCell style={{ color: getRarityColor(entry.fishName) }}>
-                    {entry.fishName}
-                  </TableCell>
-                  <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName) }}>
-                    {entry.weight}kg
-                  </TableCell>
-                  <TableCell style={entry.stars > 0 ? { color: STAR_COLOR } : undefined}>
-                    {entry.stars === 0 ? "Dead" : `${entry.stars}\u2605`}
-                  </TableCell>
-                  <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
-                    {entry.mutation}
-                  </TableCell>
-                  <TableCell className="text-right font-medium" style={{ color: getValueColor(entry.value, allValues) }}>
-                    ${entry.value.toLocaleString()}
-                  </TableCell>
-                  <TableCell className="text-right" style={{ color: getOptimizationColor(entry.optimization) }}>
-                    {entry.optimization.toFixed(1)}%
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => openEdit(entry)}
-                      >
-                        <IconEdit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(entry)}
-                      >
-                        <IconTrash className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableHead label="Rank" sortKey="rank" className="w-16" {...sortProps} />
+                  <SortableHead label="Fish" sortKey="fishName" {...sortProps} />
+                  <SortableHead label="Weight" sortKey="weight" {...sortProps} />
+                  <SortableHead label="Stars" sortKey="stars" {...sortProps} />
+                  <SortableHead label="Mutation" sortKey="mutation" {...sortProps} />
+                  <SortableHead label={valueLabel} sortKey="value" className="text-right" {...sortProps} />
+                  <SortableHead label={roeLabel} sortKey="roePerHour" className="text-right" {...sortProps} />
+                  <SortableHead label="Date" sortKey="createdAt" {...sortProps} />
+                  <TableHead className="w-24">Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {displayEntries.map((entry) => (
+                  <TableRow key={entry.id}>
+                    <TableCell className="font-medium" style={{ color: getRankColor(rankMap.get(entry.id) ?? 0) }}>
+                      #{rankMap.get(entry.id)}
+                    </TableCell>
+                    <TableCell style={{ color: getRarityColor(entry.fishName) }}>
+                      {entry.fishName}
+                    </TableCell>
+                    <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName) }}>
+                      {entry.weight}kg
+                    </TableCell>
+                    <TableCell style={entry.stars > 0 ? { color: STAR_COLOR } : undefined}>
+                      {entry.stars === 0 ? "Dead" : `${entry.stars}\u2605`}
+                    </TableCell>
+                    <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
+                      {entry.mutation}
+                    </TableCell>
+                    <TableCell className="text-right font-medium" style={{ color: getValueColor(entry.value, allValues) }}>
+                      ${entry.value.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-right font-medium" style={{ color: getValueColor(roeMap.get(entry.id) ?? 0, [...roeMap.values()]) }}>
+                      ${(roeMap.get(entry.id) ?? 0).toLocaleString()}/hr
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {new Date(entry.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEdit(entry)}
+                        >
+                          <IconEdit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDelete(entry)}
+                        >
+                          <IconTrash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
 
       {modalOpen && (
@@ -386,6 +429,7 @@ export function FishLogTab({
             {!editingEntry && <ImagePasteZone onResult={handleOcrResult} />}
             <FishForm
               key={formKey}
+              settings={{ race, artifact1, artifact2, artifact3, roeStorageLevel, decorationLevel }}
               initialData={
                 editingEntry
                   ? {

@@ -40,3 +40,15 @@ export interface FishEntry {
   updatedAt: string;
 }
 
+export interface GlobalSettings {
+  race: string;
+  artifact1: string;
+  artifact2: string;
+  artifact3: string;
+}
+
+export interface PondSettings {
+  roeStorageLevel: number;   // 0-6
+  decorationLevel: number;   // 0-6
+}
+

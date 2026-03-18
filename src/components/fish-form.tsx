@@ -10,12 +10,18 @@ import {
   MUTATION_COLORS,
   STAR_COLOR,
   getWeightColor,
+  CYCLE_TIMES,
+  RACES,
+  ARTIFACTS,
 } from "@/lib/fish-config";
 import {
   calculateValue,
   calculateOptimization,
   validateWeight,
+  calculateBaseRoePerHour,
+  calculateBoostedRoePerHour,
 } from "@/lib/fish-utils";
+import { type GlobalSettings } from "@/lib/types";
 import { recordCalculation } from "@/lib/stat-tracker";
 import { Combobox } from "@/components/ui/combobox";
 import { Input } from "@/components/ui/input";
@@ -48,6 +54,14 @@ interface FishFormProps {
     stars?: number;
     mutation?: string;
   };
+  settings?: {
+    race: string;
+    artifact1: string;
+    artifact2: string;
+    artifact3: string;
+    roeStorageLevel: number;
+    decorationLevel: number;
+  };
 }
 
 const AREA_ORDER = ["Sunken Wilds", "Angler Cave", "Spirit Roots", "Ancient Sands", "Ocean", "Forgotten Deep"] as const;
@@ -66,7 +80,7 @@ const fishOptions = AREA_ORDER.flatMap((area) =>
     }))
 );
 
-export function FishForm({ renderActions, initialData }: FishFormProps) {
+export function FishForm({ renderActions, initialData, settings }: FishFormProps) {
   const [fishName, setFishName] = React.useState(initialData?.fishName ?? "");
   const [weightStr, setWeightStr] = React.useState(
     initialData?.weight?.toString() ?? ""
@@ -118,10 +132,10 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
   const weightValidation =
     selectedFish && weightStr
       ? validateWeight(
-          weight,
-          Math.round(selectedFish.minWeight * sizeMult * 10) / 10,
-          Math.round(selectedFish.maxWeight * sizeMult * 10) / 10
-        )
+        weight,
+        Math.round(selectedFish.minWeight * sizeMult * 10) / 10,
+        Math.round(selectedFish.maxWeight * sizeMult * 10) / 10
+      )
       : null;
 
   const formData = React.useMemo<FishFormData | null>(() => {
@@ -262,28 +276,83 @@ export function FishForm({ renderActions, initialData }: FishFormProps) {
         />
       </div>
 
-      {formData && (
-        <div className="rounded-md border bg-secondary/50 p-4 space-y-1">
-          <div className="flex justify-between text-sm">
-            <span>
-              <span className="text-muted-foreground">Value</span>
-              <span className="text-xs text-yellow-500 italic"> — base only, no race/artifact bonuses</span>
-            </span>
-            <span className="font-semibold">
-              ${formData.value.toLocaleString()}
-            </span>
+      {formData && (() => {
+        const fish = FISH_SPECIES.find((f) => f.name === formData.fishName);
+        const hasMutation = formData.mutation !== "None";
+        const rarity = fish?.rarity ?? "Common";
+        const baseRoe = calculateBaseRoePerHour(formData.value, hasMutation, rarity);
+
+        const hasActiveBoosts = settings && (
+          settings.race !== "None" ||
+          settings.artifact1 !== "None" ||
+          settings.artifact2 !== "None" ||
+          settings.artifact3 !== "None"
+        );
+
+        const globalSettings: GlobalSettings = settings
+          ? { race: settings.race, artifact1: settings.artifact1, artifact2: settings.artifact2, artifact3: settings.artifact3 }
+          : { race: "None", artifact1: "None", artifact2: "None", artifact3: "None" };
+
+        const boostedRoe = settings
+          ? calculateBoostedRoePerHour(baseRoe, globalSettings, 0, 0, false)
+          : baseRoe;
+
+        // Boosted sell price (race + artifacts affect fish sell value too)
+        const cashMultiplier =
+          1 +
+          (RACES.find((r) => r.name === globalSettings.race)?.cashBonus ?? 0) +
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact1)?.cashBonus ?? 0) +
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact2)?.cashBonus ?? 0) +
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact3)?.cashBonus ?? 0);
+        const boostedValue = Math.round(formData.value * cashMultiplier);
+
+        const boostPct = hasActiveBoosts
+          ? `+${((cashMultiplier - 1) * 100).toFixed(1)}%`
+          : null;
+
+        return (
+          <div className="rounded-md border bg-secondary/50 p-4 space-y-3">
+            <div className={hasActiveBoosts ? "grid gap-3" : ""} style={hasActiveBoosts ? { gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" } : undefined}>
+              {/* Base */}
+              <div>
+                <div className="text-[11px] font-semibold text-foreground uppercase tracking-widest mb-2 pb-1 border-b border-foreground/20">
+                  Base
+                </div>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm gap-2">
+                    <span className="text-muted-foreground">Sell Price</span>
+                    <span className="font-semibold">${formData.value.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm gap-2">
+                    <span className="text-muted-foreground">Roe $/hr</span>
+                    <span className="font-semibold">${baseRoe.toLocaleString()}/hr</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Boosted */}
+              {hasActiveBoosts && (
+                <div>
+                  <div className="text-[11px] font-semibold text-amber-400/70 uppercase tracking-widest mb-2 pb-1 border-b border-amber-500/20">
+                    Boosted <span className="text-amber-400/50">({boostPct})</span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-sm gap-2">
+                      <span className="text-muted-foreground">Sell Price</span>
+                      <span className="font-semibold text-amber-400">${boostedValue.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-sm gap-2">
+                      <span className="text-muted-foreground">Roe $/hr</span>
+                      <span className="font-semibold text-amber-400">${boostedRoe.toLocaleString()}/hr</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
           </div>
-          <div className="flex justify-between text-sm">
-            <span>
-              <span className="text-muted-foreground">Optimization</span>
-              <span className="text-xs text-yellow-500 italic"> — % of max possible value for this fish</span>
-            </span>
-            <span className="font-semibold">
-              {formData.optimization.toFixed(1)}%
-            </span>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="flex gap-2 pt-2">{renderActions(formData, reset)}</div>
     </div>

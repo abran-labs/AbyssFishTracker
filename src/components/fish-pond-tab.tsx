@@ -1,8 +1,26 @@
+
 "use client";
 
 import * as React from "react";
 import { type FishEntry } from "@/lib/types";
 import { type PondSnapshotData } from "@/lib/fish-actions";
+import {
+  MUTATIONS,
+  FISH_SPECIES,
+  getRarityColor,
+  MUTATION_COLORS,
+  STAR_COLOR,
+  getWeightColor,
+  getValueColor,
+  getRankColor,
+  ROE_STORAGE_LEVELS,
+  DECORATION_LEVELS,
+  RACES,
+  ARTIFACTS,
+} from "@/lib/fish-config";
+import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
+import { useSettings } from "@/components/settings-context";
+import { PondPrediction } from "@/components/pond-prediction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -20,10 +38,9 @@ import {
   TableCell,
 } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/toast-context";
-import { getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, getOptimizationColor } from "@/lib/fish-config";
+import { IconArrowRight } from "@tabler/icons-react";
 
-const POND_SIZES = [6, 8, 10, 12, 14, 16, 18];
+const POND_SIZES = [6, 8, 10, 12, 14, 16, 18]; // This array is no longer used directly for the Select options, but kept for reference if needed elsewhere.
 
 interface SwapEntry {
   remove?: FishEntry;
@@ -89,20 +106,45 @@ export function FishPondTab({
   snapshot,
   onUpdateSnapshot,
   onPondSizeChange,
+  isActive,
 }: FishPondTabProps) {
-  const { addToast } = useToast();
+  const settings = useSettings();
   const [autoSaved, setAutoSaved] = React.useState(false);
+  const [pondSize, setPondSize] = React.useState(snapshot?.pondSize ?? 6);
+  const [showSortNotice, setShowSortNotice] = React.useState(false);
+  const swapsDismissKey = snapshot ? `pondSwapsDismissed-${snapshot.createdAt}` : null;
+  const [swapsDismissed, setSwapsDismissed] = React.useState(() => {
+    if (typeof window === "undefined" || !snapshot) return false;
+    return !!localStorage.getItem(`pondSwapsDismissed-${snapshot.createdAt}`);
+  });
 
-  const pondSize = snapshot?.pondSize ?? 6;
+  React.useEffect(() => {
+    if (snapshot?.pondSize && snapshot.pondSize !== pondSize) {
+      setPondSize(snapshot.pondSize);
+    }
+  }, [snapshot?.pondSize, pondSize]);
 
-  // Filter out dead fish (stars === 0), then sort by value descending
-  const sorted = React.useMemo(
-    () =>
-      [...entries]
-        .filter((e) => e.stars !== 0)
-        .sort((a, b) => b.value - a.value),
-    [entries]
-  );
+  React.useEffect(() => {
+    if (isActive && !localStorage.getItem("pondSortNoticeDismissed")) {
+      setShowSortNotice(true);
+    }
+  }, [isActive]);
+
+  const dismissSortNotice = () => {
+    localStorage.setItem("pondSortNoticeDismissed", "true");
+    setShowSortNotice(false);
+  };
+
+  // 1) Sort ALL user's fish by base Roe $/hr instead of value
+  const sorted = React.useMemo(() => {
+    return [...entries].sort((a, b) => {
+      const aFish = FISH_SPECIES.find((f) => f.name === a.fishName);
+      const bFish = FISH_SPECIES.find((f) => f.name === b.fishName);
+      const aRoe = aFish ? calculateBaseRoePerHour(a.value, a.mutation !== "None", aFish.rarity) : 0;
+      const bRoe = bFish ? calculateBaseRoePerHour(b.value, b.mutation !== "None", bFish.rarity) : 0;
+      return bRoe - aRoe;
+    });
+  }, [entries]);
 
   // The ideal top-N pond (what rankings say should be in the pond)
   const idealPond = sorted.slice(0, pondSize);
@@ -118,9 +160,57 @@ export function FishPondTab({
     return found;
   }, [snapshot, entries]);
 
-  const allValues = React.useMemo(
-    () => sorted.map((e) => e.value),
-    [sorted]
+  // Provide a quick lookup to rank index in the sorted array (by roe $/hr)
+  const rankMap = React.useMemo(() => {
+    const map = new Map<string, number>();
+    sorted.forEach((e, idx) => map.set(e.id, idx + 1));
+    return map;
+  }, [sorted]);
+
+  const allValues = React.useMemo(() => entries.map((e) => e.value), [entries]);
+
+  const globalSettings = React.useMemo(() => ({
+    race: settings.race,
+    artifact1: settings.artifact1,
+    artifact2: settings.artifact2,
+    artifact3: settings.artifact3,
+  }), [settings.race, settings.artifact1, settings.artifact2, settings.artifact3]);
+
+  const { cashBonus, speedBonus, boostMultiplier } = React.useMemo(() => {
+    const r = RACES.find((r) => r.name === settings.race)?.cashBonus ?? 0;
+    const a1 = ARTIFACTS.find((a) => a.name === settings.artifact1)?.cashBonus ?? 0;
+    const a2 = ARTIFACTS.find((a) => a.name === settings.artifact2)?.cashBonus ?? 0;
+    const a3 = ARTIFACTS.find((a) => a.name === settings.artifact3)?.cashBonus ?? 0;
+    const cash = r + a1 + a2 + a3;
+    const speed = DECORATION_LEVELS[settings.decorationLevel]?.speedBonus ?? 0;
+    return {
+      cashBonus: cash,
+      speedBonus: speed,
+      boostMultiplier: (1 + cash) * (1 + speed),
+    };
+  }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3, settings.decorationLevel]);
+
+  const valueLabel = cashBonus > 0.0005
+    ? `Value (+${(cashBonus * 100).toFixed(1)}%)`
+    : "Value";
+
+  const roeLabel = (cashBonus + speedBonus) > 0.0005
+    ? `Roe $/hr (+${((cashBonus + speedBonus) * 100).toFixed(1)}%)`
+    : "Roe $/hr";
+
+  const getDisplayRoe = React.useCallback((entry: FishEntry) => {
+    const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
+    if (!fish) return 0;
+    const base = calculateBaseRoePerHour(entry.value, entry.mutation !== "None", fish.rarity);
+    return Math.round(calculateBoostedRoePerHour(base, globalSettings, settings.decorationLevel, 0, false));
+  }, [globalSettings, settings.decorationLevel]);
+
+  const allRoeValues = React.useMemo(() => pondFish.map(getDisplayRoe), [pondFish, getDisplayRoe]);
+
+  // Display pond fish sorted by roe $/hr descending
+  const displayPondFish = React.useMemo(
+    () => [...pondFish].sort((a, b) => getDisplayRoe(b) - getDisplayRoe(a)),
+    [pondFish, getDisplayRoe]
   );
 
   // Auto-save snapshot on first visit (no existing snapshot)
@@ -128,6 +218,8 @@ export function FishPondTab({
     if (autoSaved) return;
     if (snapshot === null && idealPond.length > 0) {
       setAutoSaved(true);
+      // New user — mark notice as seen so they never see the "sorting changed" banner
+      localStorage.setItem("pondSortNoticeDismissed", "true");
       onUpdateSnapshot(idealPond.map((f) => f.id), pondSize);
     }
   }, [snapshot, idealPond, pondSize, onUpdateSnapshot, autoSaved]);
@@ -138,46 +230,104 @@ export function FishPondTab({
     return computeSwaps(idealPond, snapshot, sorted);
   }, [snapshot, idealPond, sorted]);
 
+  // When snapshot changes, re-check if the new snapshot's swaps are dismissed
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !snapshot) return;
+    setSwapsDismissed(!!localStorage.getItem(`pondSwapsDismissed-${snapshot.createdAt}`));
+  }, [snapshot?.createdAt]);
+
   const handleUpdatePond = React.useCallback(async () => {
     await onUpdateSnapshot(idealPond.map((f) => f.id), pondSize);
-    addToast({
-      variant: "success",
-      title: "Pond Updated",
-      description: "Your pond has been updated to the ideal ranking.",
-    });
-  }, [idealPond, pondSize, onUpdateSnapshot, addToast]);
+  }, [idealPond, pondSize, onUpdateSnapshot]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Fish Pond</h2>
-        <div className="flex items-center gap-2">
-          {snapshot && (
-            <span className="text-xs text-muted-foreground mr-2">
-              Last updated: {formatTimeAgo(snapshot.createdAt)}
-            </span>
-          )}
-          <span className="text-sm text-muted-foreground">Slots:</span>
-          <Select
-            value={pondSize.toString()}
-            onValueChange={(v) => onPondSizeChange(parseInt(v, 10))}
-          >
-            <SelectTrigger className="w-20">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {POND_SIZES.map((s) => (
-                <SelectItem key={s} value={s.toString()}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+        <h2 className="text-lg font-semibold shrink-0">Fish Pond</h2>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 ml-auto">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Storage:</span>
+            <Select
+              value={settings.roeStorageLevel.toString()}
+              onValueChange={(val) => settings.updateSettings({ roeStorageLevel: parseInt(val, 10) })}
+            >
+              <SelectTrigger className="w-[100px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ROE_STORAGE_LEVELS.map((lvl) => (
+                  <SelectItem key={lvl.level} value={lvl.level.toString()}>
+                    {lvl.capacity.toLocaleString()}kg
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Speed:</span>
+            <Select
+              value={settings.decorationLevel.toString()}
+              onValueChange={(val) => settings.updateSettings({ decorationLevel: parseInt(val, 10) })}
+            >
+              <SelectTrigger className="w-[80px] h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DECORATION_LEVELS.map((lvl) => (
+                  <SelectItem key={lvl.level} value={lvl.level.toString()}>
+                    {lvl.speedBonus > 0 ? `+${(lvl.speedBonus * 100).toFixed(0)}%` : "+0%"}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Size:</span>
+            <Select
+              value={pondSize.toString()}
+              onValueChange={(val) => {
+                const num = parseInt(val, 10);
+                setPondSize(num);
+                onPondSizeChange(num);
+              }}
+            >
+              <SelectTrigger className="w-24 h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[6, 8, 10, 12, 14, 16, 18].map((num) => (
+                  <SelectItem key={num} value={num.toString()}>
+                    {num} Fish
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
+      {/* Sort Notice */}
+      {showSortNotice && (
+        <Card className="border-blue-500/50 bg-blue-500/5">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-blue-400">
+              Pond Sorting Update!
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-muted-foreground">
+            <p>
+              Your pond is now sorted by <strong>Roe $/hr</strong> instead of fish value.
+              This is a more accurate metric for maximizing your passive income.
+            </p>
+            <Button size="sm" variant="outline" onClick={dismissSortNotice}>
+              Got it!
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Pending Swaps Banner */}
-      {swaps.length > 0 && (
+      {swaps.length > 0 && !swapsDismissed && (
         <Card className="border-amber-500/50 bg-amber-500/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-amber-400">
@@ -185,53 +335,96 @@ export function FishPondTab({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            {swaps.map((swap, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 text-sm rounded-md bg-background/50 px-3 py-2"
-              >
-                {swap.remove && swap.add ? (
-                  <>
-                    <span className="text-red-400 shrink-0">Remove:</span>
-                    <span style={{ color: getRarityColor(swap.remove.fishName) }}>
-                      {swap.remove.fishName}
-                    </span>
-                    <span className="text-muted-foreground">
-                      ({swap.remove.weight}kg, ${swap.remove.value.toLocaleString()})
-                    </span>
-                    <span className="text-muted-foreground mx-1">&rarr;</span>
+            {swaps.map((swap, i) => {
+              const haveFish = swap.remove;
+              const wantFish = swap.add;
+
+              if (haveFish && wantFish) {
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="flex-1 flex flex-col gap-0.5 min-w-0 bg-green-500/5 p-2 rounded-md border border-green-500/10">
+                      <div className="text-xs font-semibold text-green-400 mb-1">Add</div>
+                      <div className="bg-background/80 px-2 py-1.5 rounded text-sm border shadow-sm">
+                        <div className="flex items-baseline justify-between gap-2 overflow-hidden">
+                          <span
+                            className="font-medium truncate"
+                            style={{ color: getRarityColor(wantFish.fishName) }}
+                          >
+                            {wantFish.fishName}
+                          </span>
+                          <span
+                            className="text-xs font-semibold shrink-0"
+                            style={{ color: getValueColor(wantFish.value, allValues) }}
+                          >
+                            ${wantFish.value.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          ${getDisplayRoe(wantFish).toLocaleString()}/hr
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0 px-2 py-1 rounded bg-secondary/50 border">
+                      <IconArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-0.5 min-w-0 bg-red-500/5 p-2 rounded-md border border-red-500/10">
+                      <div className="text-xs font-semibold text-red-400 mb-1">Remove</div>
+                      <div className="bg-background/80 px-2 py-1.5 rounded text-sm border shadow-sm">
+                        <div className="flex items-baseline justify-between gap-2 overflow-hidden">
+                          <span
+                            className="font-medium truncate"
+                            style={{ color: getRarityColor(haveFish.fishName) }}
+                          >
+                            {haveFish.fishName}
+                          </span>
+                          <span
+                            className="text-xs font-semibold shrink-0"
+                            style={{ color: getValueColor(haveFish.value, allValues) }}
+                          >
+                            ${haveFish.value.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          ${getDisplayRoe(haveFish).toLocaleString()}/hr
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } else if (wantFish) {
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-green-500/5 px-3 py-2 border border-green-500/10">
                     <span className="text-green-400 shrink-0">Add:</span>
-                    <span style={{ color: getRarityColor(swap.add.fishName) }}>
-                      {swap.add.fishName}
+                    <span style={{ color: getRarityColor(wantFish.fishName) }}>
+                      {wantFish.fishName}
                     </span>
                     <span className="text-muted-foreground">
-                      ({swap.add.weight}kg, ${swap.add.value.toLocaleString()})
-                    </span>
-                  </>
-                ) : swap.add ? (
-                  <>
-                    <span className="text-green-400 shrink-0">Add:</span>
-                    <span style={{ color: getRarityColor(swap.add.fishName) }}>
-                      {swap.add.fishName}
+                      ({wantFish.weight}kg, ${wantFish.value.toLocaleString()})
                     </span>
                     <span className="text-muted-foreground">
-                      ({swap.add.weight}kg, ${swap.add.value.toLocaleString()})
+                      (${getDisplayRoe(wantFish).toLocaleString()}/hr)
                     </span>
-                  </>
-                ) : swap.remove ? (
-                  <>
+                  </div>
+                );
+              } else if (haveFish) {
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-red-500/5 px-3 py-2 border border-red-500/10">
                     <span className="text-red-400 shrink-0">Remove:</span>
-                    <span style={{ color: getRarityColor(swap.remove.fishName) }}>
-                      {swap.remove.fishName}
+                    <span style={{ color: getRarityColor(haveFish.fishName) }}>
+                      {haveFish.fishName}
                     </span>
                     <span className="text-muted-foreground">
-                      ({swap.remove.weight}kg, ${swap.remove.value.toLocaleString()})
+                      ({haveFish.weight}kg, ${haveFish.value.toLocaleString()})
                     </span>
-                  </>
-                ) : null}
-              </div>
-            ))}
-            <div className="pt-2">
+                    <span className="text-muted-foreground">
+                      (${getDisplayRoe(haveFish).toLocaleString()}/hr)
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })}
+            <div className="pt-2 flex gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -239,6 +432,17 @@ export function FishPondTab({
                 onClick={handleUpdatePond}
               >
                 Update Pond
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                onClick={() => {
+                  if (swapsDismissKey) localStorage.setItem(swapsDismissKey, "true");
+                  setSwapsDismissed(true);
+                }}
+              >
+                Ignore
               </Button>
             </div>
           </CardContent>
@@ -253,10 +457,15 @@ export function FishPondTab({
         </Card>
       ) : (
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between py-4">
             <CardTitle className="text-base">
               Your Pond ({pondFish.length}/{pondSize})
             </CardTitle>
+            {snapshot && (
+              <span className="text-xs text-muted-foreground">
+                Last updated: {formatTimeAgo(snapshot.createdAt)}
+              </span>
+            )}
           </CardHeader>
           <CardContent className="p-0">
             {pondFish.length === 0 ? (
@@ -272,31 +481,46 @@ export function FishPondTab({
                     <TableHead>Weight</TableHead>
                     <TableHead>Stars</TableHead>
                     <TableHead>Mutation</TableHead>
-                    <TableHead className="text-right">Value</TableHead>
-                    <TableHead className="text-right">Opt %</TableHead>
+                    <TableHead className="text-right">{valueLabel}</TableHead>
+                    <TableHead className="text-right">{roeLabel}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {pondFish.map((entry, i) => (
+                  {displayPondFish.map((entry) => (
                     <TableRow key={entry.id}>
-                      <TableCell className="font-medium" style={{ color: getRankColor(i + 1) }}>#{i + 1}</TableCell>
+                      <TableCell className="font-medium" style={{ color: getRankColor(rankMap.get(entry.id) ?? 0) }}>
+                        #{rankMap.get(entry.id)}
+                      </TableCell>
                       <TableCell style={{ color: getRarityColor(entry.fishName) }}>
                         {entry.fishName}
                       </TableCell>
-                      <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName) }}>
+                      <TableCell
+                        style={{ color: getWeightColor(entry.weight, entry.fishName) }}
+                      >
                         {entry.weight}kg
                       </TableCell>
-                      <TableCell style={{ color: STAR_COLOR }}>
-                        {`${entry.stars}\u2605`}
+                      <TableCell
+                        style={entry.stars > 0 ? { color: STAR_COLOR } : undefined}
+                      >
+                        {entry.stars === 0 ? "Dead" : `${entry.stars}\u2605`}
                       </TableCell>
-                      <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
+                      <TableCell
+                        style={
+                          MUTATION_COLORS[entry.mutation]
+                            ? { color: MUTATION_COLORS[entry.mutation] }
+                            : undefined
+                        }
+                      >
                         {entry.mutation}
                       </TableCell>
-                      <TableCell className="text-right font-medium" style={{ color: getValueColor(entry.value, allValues) }}>
+                      <TableCell
+                        className="text-right font-medium"
+                        style={{ color: getValueColor(entry.value, allValues) }}
+                      >
                         ${entry.value.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right" style={{ color: getOptimizationColor(entry.optimization) }}>
-                        {entry.optimization.toFixed(1)}%
+                      <TableCell className="text-right font-medium" style={{ color: getValueColor(getDisplayRoe(entry), allRoeValues) }}>
+                        ${getDisplayRoe(entry).toLocaleString()}/hr
                       </TableCell>
                     </TableRow>
                   ))}
@@ -306,6 +530,8 @@ export function FishPondTab({
           </CardContent>
         </Card>
       )}
+
+      <PondPrediction pondFish={pondFish} />
     </div>
   );
 }

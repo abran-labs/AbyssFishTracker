@@ -15,6 +15,20 @@ model User {
 
   entries      FishEntry[]
   pondSnapshot PondSnapshot?
+  settings     UserSettings?
+}
+
+model UserSettings {
+  id              String @id @default(cuid())
+  race            String @default("None")
+  artifact1       String @default("None")
+  artifact2       String @default("None")
+  artifact3       String @default("None")
+  roeStorageLevel Int    @default(0)
+  decorationLevel Int    @default(0)
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model FishEntry {

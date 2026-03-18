@@ -16,6 +16,7 @@ export const FISH_SPECIES: FishSpecies[] = [
   { name: "Jellyfish", rarity: "Uncommon", baseValue: 35, minWeight: 3.2, maxWeight: 16.8, areas: ["Spirit Roots"] },
   { name: "Tambaqui", rarity: "Uncommon", baseValue: 18, minWeight: 24, maxWeight: 75.6, areas: ["Sunken Wilds"] },
   { name: "Trout", rarity: "Uncommon", baseValue: 24, minWeight: 8, maxWeight: 33.6, areas: ["Sunken Wilds"] },
+  { name: "Blackfin Tuna", rarity: "Uncommon", baseValue: 60, minWeight: 4.8, maxWeight: 26.88, areas: ["Ancient Sands"] },
   // Rare
   { name: "Sea Horse", rarity: "Rare", baseValue: 250, minWeight: 0.4, maxWeight: 1.68, areas: ["Ocean"] },
   { name: "Piranha", rarity: "Rare", baseValue: 44, minWeight: 4, maxWeight: 20.16, areas: ["Ocean", "Angler Cave", "Sunken Wilds"] },
@@ -24,7 +25,6 @@ export const FISH_SPECIES: FishSpecies[] = [
   { name: "Mahi Mahi", rarity: "Rare", baseValue: 8, minWeight: 6.4, maxWeight: 33.6, areas: ["Forgotten Deep"] },
   { name: "Grouper", rarity: "Rare", baseValue: 28, minWeight: 4.8, maxWeight: 23.52, areas: ["Ancient Sands"] },
   { name: "Scorpionfish", rarity: "Rare", baseValue: 60, minWeight: 3.2, maxWeight: 13.44, areas: ["Ancient Sands"] },
-  { name: "Blackfin Tuna", rarity: "Rare", baseValue: 60, minWeight: 4.8, maxWeight: 26.88, areas: ["Ancient Sands"] },
   { name: "Sunfish", rarity: "Rare", baseValue: 17, minWeight: 16, maxWeight: 67.2, areas: ["Spirit Roots"] },
   { name: "Narwhal", rarity: "Rare", baseValue: 18, minWeight: 24, maxWeight: 84, areas: ["Spirit Roots"] },
   { name: "Anglerfish", rarity: "Rare", baseValue: 35, minWeight: 24, maxWeight: 100.8, areas: ["Angler Cave"] },
@@ -84,6 +84,72 @@ export const STAR_LEVELS: StarLevel[] = [
   { label: "3 Stars", value: 3, multiplier: 1.0 },
 ];
 
+// Cycle times per rarity (seconds)
+export const CYCLE_TIMES: Record<string, number> = {
+  Common: 60,
+  Uncommon: 120,
+  Rare: 240,
+  Epic: 420,
+  Legendary: 600,
+  Mythical: 900,
+};
+
+// Roe Storage capacity per upgrade level (kg)
+export const ROE_STORAGE_LEVELS = [
+  { level: 0, capacity: 500 },
+  { level: 1, capacity: 800 },
+  { level: 2, capacity: 1500 },
+  { level: 3, capacity: 2000 },
+  { level: 4, capacity: 2750 },
+  { level: 5, capacity: 3500 },
+  { level: 6, capacity: 5500 },
+];
+
+// Decoration / Roe Speed bonus per upgrade level
+export const DECORATION_LEVELS = [
+  { level: 0, speedBonus: 0 },
+  { level: 1, speedBonus: 0.05 },
+  { level: 2, speedBonus: 0.10 },
+  { level: 3, speedBonus: 0.15 },
+  { level: 4, speedBonus: 0.20 },
+  { level: 5, speedBonus: 0.25 },
+  { level: 6, speedBonus: 0.30 },
+];
+
+// Fish Feed types with roe speed bonus and duration
+export const FISH_FEED = [
+  { name: "None", speedBonus: 0, durationMinutes: 0, color: undefined },
+  { name: "Algae Feed", speedBonus: 0.05, durationMinutes: 15, color: "rgb(114, 126, 154)" },   // Common
+  { name: "Fish Feed", speedBonus: 0.10, durationMinutes: 20, color: "rgb(114, 126, 154)" },    // Common
+  { name: "Worm Feed", speedBonus: 0.15, durationMinutes: 30, color: "rgb(135, 203, 116)" },    // Uncommon
+  { name: "Shrimp Feed", speedBonus: 0.20, durationMinutes: 45, color: "rgb(89, 191, 255)" },   // Rare
+  { name: "Octapus Feed", speedBonus: 0.30, durationMinutes: 60, color: "rgb(147, 123, 226)" }, // Epic
+  { name: "Star Feed", speedBonus: 0.40, durationMinutes: 120, color: "rgb(241, 174, 65)" },    // Legendary
+];
+
+// Races with cash bonus (applied at roe production time)
+export const RACES = [
+  { name: "None", cashBonus: 0, color: undefined },
+  { name: "Spirit", cashBonus: 0.08, color: "rgb(89, 191, 255)" },      // Rare
+  { name: "Anglerfish", cashBonus: 0.08, color: "rgb(147, 123, 226)" }, // Epic
+  { name: "Shark", cashBonus: 0.10, color: "rgb(241, 174, 65)" },       // Legendary
+  { name: "Kraken", cashBonus: 0.15, color: "rgb(183, 59, 59)" },       // Mythical
+  { name: "Sea Angel", cashBonus: 0.15, color: "rgb(183, 59, 59)" },    // Mythical
+];
+
+// Artifacts with cash bonus (applied at roe production time)
+export const ARTIFACTS = [
+  { name: "None", cashBonus: 0, unique: false, color: undefined },
+  { name: "The King's Fortune", cashBonus: 0.10, unique: true, color: "rgb(129, 184, 164)" },  // Secret
+  { name: "Coin Tier I", cashBonus: 0.0125, unique: false, color: "rgb(155, 94, 166)" },
+  { name: "Coin Tier II", cashBonus: 0.01275, unique: false, color: "rgb(87, 115, 179)" },
+  { name: "Coin Tier III", cashBonus: 0.013, unique: false, color: "rgb(51, 148, 213)" },
+  { name: "Coin Tier IV", cashBonus: 0.01325, unique: false, color: "rgb(41, 177, 99)" },
+  { name: "Coin Tier V", cashBonus: 0.0135, unique: false, color: "rgb(235, 191, 16)" },
+  { name: "Coin Tier VI", cashBonus: 0.01375, unique: false, color: "rgb(224, 123, 34)" },
+  { name: "Coin Tier VII", cashBonus: 0.014, unique: false, color: "rgb(225, 75, 59)" },
+];
+
 export function getAvailableMutations(fish: FishSpecies): Mutation[] {
   return MUTATIONS.filter(
     (m) => !m.area || fish.areas.includes(m.area)
@@ -96,6 +162,8 @@ export const RARITY_COLORS: Record<string, string> = {
   Rare: "rgb(89, 191, 255)",
   Epic: "rgb(147, 123, 226)",
   Legendary: "rgb(241, 174, 65)",
+  Mythical: "rgb(183, 59, 59)",
+  Secret: "rgb(129, 184, 164)",
 };
 
 export const MUTATION_COLORS: Record<string, string> = {

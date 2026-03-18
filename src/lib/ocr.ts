@@ -203,14 +203,12 @@ async function getWorker(): Promise<Tesseract.Worker> {
     return workerPromise;
 }
 
-async function preprocessImage(imageSource: File | Blob | string): Promise<string | HTMLCanvasElement> {
-    // If we're not in a browser environment, return as is
-    if (typeof window === "undefined" || !document) return imageSource as any;
+async function loadAndScale(imageSource: File | Blob | string): Promise<{ canvas: HTMLCanvasElement; url: string } | null> {
+    if (typeof window === "undefined" || !document) return null;
 
-    // Load image into an Image object
     const img = new Image();
     img.crossOrigin = "Anonymous";
-    const url = imageSource instanceof Blob ? URL.createObjectURL(imageSource) : imageSource;
+    const url = imageSource instanceof Blob ? URL.createObjectURL(imageSource) : imageSource as string;
 
     await new Promise((resolve, reject) => {
         img.onload = resolve;
@@ -218,14 +216,34 @@ async function preprocessImage(imageSource: File | Blob | string): Promise<strin
         img.src = url;
     });
 
-    // Create an offscreen canvas
+    // Upscale to at least 1200px wide — Tesseract accuracy degrades badly on low-res inputs.
+    const SCALE = Math.min(4, Math.max(1, Math.ceil(1200 / img.width)));
+
     const canvas = document.createElement("canvas");
-    canvas.width = img.width;
-    canvas.height = img.height;
+    canvas.width = img.width * SCALE;
+    canvas.height = img.height * SCALE;
+    const ctx = canvas.getContext("2d")!;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    return { canvas, url };
+}
+
+// Returns upscaled image (no threshold) — mirrors what the user sees when they zoom in
+async function upscaleImage(imageSource: File | Blob | string): Promise<string | HTMLCanvasElement> {
+    const result = await loadAndScale(imageSource);
+    return result?.canvas ?? (imageSource as string);
+}
+
+// Returns upscaled + thresholded image for the inverted pass
+async function preprocessImage(imageSource: File | Blob | string): Promise<string | HTMLCanvasElement> {
+    const result = await loadAndScale(imageSource);
+    if (!result) return imageSource as any;
+    const { canvas, url } = result;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return url;
-
-    ctx.drawImage(img, 0, 0);
 
     // Apply image processing: grayscale and threshold/invert
     // The dark UI with bright text is hard for Tesseract, better to invert it
@@ -256,21 +274,15 @@ export async function extractFishData(
 ): Promise<OcrResult> {
     const worker = await getWorker();
 
-    // Run the original image, and a pre-processed (inverted) image,
-    // since pre-processing helps numbers but might mess up colored names like Epic rarities.
-    let input: string | File | Blob = imageSource;
-    if (imageSource instanceof Blob && !(imageSource instanceof File)) {
-        input = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(imageSource);
-        });
-    }
-
-    const processedInput = await preprocessImage(imageSource);
+    // Run two passes: upscaled colour image (good for fish names/coloured text)
+    // and upscaled + thresholded image (good for numbers/stars).
+    const [upscaledInput, processedInput] = await Promise.all([
+        upscaleImage(imageSource),
+        preprocessImage(imageSource),
+    ]);
 
     const [normalRun, processedRun] = await Promise.all([
-        worker.recognize(input),
+        worker.recognize(upscaledInput),
         worker.recognize(processedInput),
     ]);
 

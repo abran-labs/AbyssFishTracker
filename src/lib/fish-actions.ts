@@ -150,3 +150,58 @@ export async function saveServerPondSize(
     createdAt: snapshot.createdAt.toISOString(),
   };
 }
+
+// --- User Settings ---
+
+export interface UserSettingsData {
+  race: string;
+  artifact1: string;
+  artifact2: string;
+  artifact3: string;
+  roeStorageLevel: number;
+  decorationLevel: number;
+}
+
+const DEFAULT_SETTINGS: UserSettingsData = {
+  race: "None",
+  artifact1: "None",
+  artifact2: "None",
+  artifact3: "None",
+  roeStorageLevel: 0,
+  decorationLevel: 0,
+};
+
+export async function getServerSettings(): Promise<UserSettingsData> {
+  const { userId } = await requireUser();
+  const settings = await prisma.userSettings.findUnique({
+    where: { userId },
+  });
+  if (!settings) return DEFAULT_SETTINGS;
+  return {
+    race: settings.race,
+    artifact1: settings.artifact1,
+    artifact2: settings.artifact2,
+    artifact3: settings.artifact3,
+    roeStorageLevel: settings.roeStorageLevel,
+    decorationLevel: settings.decorationLevel,
+  };
+}
+
+export async function saveServerSettings(
+  data: Partial<UserSettingsData>
+): Promise<UserSettingsData> {
+  const { userId } = await requireUser();
+  const settings = await prisma.userSettings.upsert({
+    where: { userId },
+    update: data,
+    create: { userId, ...DEFAULT_SETTINGS, ...data },
+  });
+  return {
+    race: settings.race,
+    artifact1: settings.artifact1,
+    artifact2: settings.artifact2,
+    artifact3: settings.artifact3,
+    roeStorageLevel: settings.roeStorageLevel,
+    decorationLevel: settings.decorationLevel,
+  };
+}
