@@ -41,79 +41,97 @@ Offline production runs at 50% rate.
 
 ## Fish Data Table
 
-| Fish            | Rarity    | Base Value | Min Weight | Max Weight |
-| --------------- | --------- | ---------- | ---------- | ---------- |
-| Blue Tang       | Common    | 14         | 0.32kg     | 1.68kg     |
-| Clownfish       | Common    | 12         | 0.8kg      | 3.36kg     |
-| Pufferfish      | Uncommon  | 13         | 1.6kg      | 6.72kg     |
-| Salmon          | Common    | 9          | 3.2kg      | 13.44kg    |
-| Sea Horse       | Rare      | 250        | 0.4kg      | 1.68kg     |
-| Piranha         | Rare      | 44         | 4kg        | 20.16kg    |
-| Blobfish        | Rare      | 75         | 6.4kg      | 33.6kg     |
-| Bluefin Tuna    | Legendary | 36         | 120kg      | 336kg      |
-| Tang            | Common    | 12         | 0.32kg     | 1.68kg     |
-| Lionfish        | Rare      | 20         | 1.6kg      | 11.75kg    |
-| Mahi Mahi       | Rare      | 8          | 6.4kg      | 33.6kg     |
-| Barracuda       | Epic      | 20         | 4.8kg      | 20.16kg    |
-| Cod             | Uncommon  | 18         | 3.2kg      | 20.16kg    |
-| Grouper         | Rare      | 28         | 4.8kg      | 23.52kg    |
-| Scorpionfish    | Rare      | 60         | 3.2kg      | 13.44kg    |
-| Blackfin Tuna   | Uncommon  | 60         | 4.8kg      | 26.88kg    |
-| Cavefish        | Epic      | 22         | 24kg       | 134.4kg    |
-| Shark           | Epic      | 40         | 16kg       | 117.6kg    |
-| Bigmouthfish    | Legendary | 76         | 16kg       | 84kg       |
-| Ancient Shark   | Legendary | 50         | 72kg       | 218.4kg    |
-| Pompano         | Common    | 14         | 1.6kg      | 13.44kg    |
-| Sunfish         | Rare      | 17         | 16kg       | 67.2kg     |
-| Narwhal         | Rare      | 18         | 24kg       | 84kg       |
-| Pacific Fanfish | Common    | 20         | 4kg        | 20.16kg    |
-| Napoleon        | Uncommon  | 20         | 8kg        | 42kg       |
-| Jellyfish       | Uncommon  | 35         | 3.2kg      | 16.8kg     |
-| Sailfish        | Epic      | 40         | 24kg       | 100.8kg    |
-| Hammer Shark    | Epic      | 48         | 32kg       | 134.4kg    |
-| Eyefish         | Legendary | 160        | 16kg       | 75.6kg     |
-| Anglerfish      | Rare      | 35         | 24kg       | 100.8kg    |
-| Discus          | Common    | 25         | 4.8kg      | 23.52kg    |
-| Tambaqui        | Uncommon  | 18         | 24kg       | 75.6kg     |
-| Trout           | Uncommon  | 24         | 8kg        | 33.6kg     |
-| Sea Turtle      | Rare      | 20         | 48kg       | 142.8kg    |
-| Jaguar Shark    | Epic      | 50         | 56kg       | 184.8kg    |
-| Toucan Fish     | Epic      | 90         | 20kg       | 67.2kg     |
-| Sacabambaspis   | Legendary | 150        | 17.6kg     | 70.56kg    |
+| Fish            | Rarity    | Base Value | Min Weight | Max Weight | Area                             |
+| --------------- | --------- | ---------- | ---------- | ---------- | -------------------------------- |
+| Blue Tang       | Common    | 14         | 0.32kg     | 1.68kg     | Forgotten Deep, Ocean            |
+| Clownfish       | Common    | 12         | 0.8kg      | 3.36kg     | Forgotten Deep, Ocean            |
+| Pufferfish      | Uncommon  | 13         | 1.6kg      | 6.72kg     | Forgotten Deep, Ocean            |
+| Salmon          | Common    | 9          | 3.2kg      | 13.44kg    | Forgotten Deep, Ocean            |
+| Sea Horse       | Rare      | 250        | 0.4kg      | 1.68kg     | Ocean                            |
+| Piranha         | Rare      | 44         | 4kg        | 20.16kg    | Ocean, Angler Cave, Sunken Wilds |
+| Blobfish        | Rare      | 75         | 6.4kg      | 33.6kg     | Ocean, Angler Cave               |
+| Bluefin Tuna    | Legendary | 36         | 120kg      | 336kg      | Ocean                            |
+| Tang            | Common    | 12         | 0.32kg     | 1.68kg     | Forgotten Deep                   |
+| Lionfish        | Rare      | 20         | 1.6kg      | 11.75kg    | Forgotten Deep                   |
+| Mahi Mahi       | Rare      | 8          | 6.4kg      | 33.6kg     | Forgotten Deep                   |
+| Barracuda       | Epic      | 20         | 4.8kg      | 20.16kg    | Forgotten Deep                   |
+| Cod             | Uncommon  | 18         | 3.2kg      | 20.16kg    | Ancient Sands                    |
+| Grouper         | Rare      | 28         | 4.8kg      | 23.52kg    | Ancient Sands                    |
+| Scorpionfish    | Rare      | 60         | 3.2kg      | 13.44kg    | Ancient Sands                    |
+| Blackfin Tuna   | Uncommon  | 60         | 4.8kg      | 26.88kg    | Ancient Sands                    |
+| Cavefish        | Epic      | 22         | 24kg       | 134.4kg    | Ancient Sands                    |
+| Shark           | Epic      | 40         | 16kg       | 117.6kg    | Ocean, Ancient Sands             |
+| Bigmouthfish    | Legendary | 76         | 16kg       | 84kg       | Ancient Sands                    |
+| Ancient Shark   | Legendary | 50         | 72kg       | 218.4kg    | Ancient Sands                    |
+| Pompano         | Common    | 14         | 1.6kg      | 13.44kg    | Ancient Sands                    |
+| Sunfish         | Rare      | 17         | 16kg       | 67.2kg     | Spirit Roots                     |
+| Narwhal         | Rare      | 18         | 24kg       | 84kg       | Spirit Roots                     |
+| Pacific Fanfish | Common    | 20         | 4kg        | 20.16kg    | Spirit Roots                     |
+| Napoleon        | Uncommon  | 20         | 8kg        | 42kg       | Spirit Roots                     |
+| Jellyfish       | Uncommon  | 35         | 3.2kg      | 16.8kg     | Spirit Roots                     |
+| Sailfish        | Epic      | 40         | 24kg       | 100.8kg    | Ocean, Spirit Roots              |
+| Hammer Shark    | Epic      | 48         | 32kg       | 134.4kg    | Spirit Roots                     |
+| Eyefish         | Legendary | 160        | 16kg       | 75.6kg     | Spirit Roots                     |
+| Anglerfish      | Rare      | 35         | 24kg       | 100.8kg    | Angler Cave                      |
+| Discus          | Common    | 25         | 4.8kg      | 23.52kg    | Sunken Wilds                     |
+| Tambaqui        | Uncommon  | 18         | 24kg       | 75.6kg     | Sunken Wilds                     |
+| Trout           | Uncommon  | 24         | 8kg        | 33.6kg     | Sunken Wilds                     |
+| Sea Turtle      | Rare      | 20         | 48kg       | 142.8kg    | Sunken Wilds                     |
+| Jaguar Shark    | Epic      | 50         | 56kg       | 184.8kg    | Sunken Wilds                     |
+| Toucan Fish     | Epic      | 90         | 20kg       | 67.2kg     | Sunken Wilds                     |
+| Sacabambaspis   | Legendary | 150        | 17.6kg     | 70.56kg    | Sunken Wilds                     |
+| Boxfish         | Common    | 32         | 6.4kg      | 30.24kg    | Gloomspore Valley                |
+| Stingray        | Common    | 35         | 9.6kg      | 40.32kg    | Gloomspore Valley                |
+| Squid           | Uncommon  | 65         | 8kg        | 26.88kg    | Gloomspore Valley                |
+| Atlantic Octopus| Uncommon  | 60         | 24kg       | 75.6kg     | Gloomspore Valley                |
+| Catfish         | Uncommon  | 32         | 24kg       | 75.6kg     | Gloomspore Valley                |
+| Largemouth Bass | Rare      | 65         | 20kg       | 58.8kg     | Gloomspore Valley                |
+| Sockeye Salmon  | Rare      | 100        | 16kg       | 50.4kg     | Gloomspore Valley                |
+| Surubim         | Rare      | 68         | 32kg       | 92.4kg     | Gloomspore Valley                |
+| Manta Ray       | Epic      | 48         | 56kg       | 168kg      | Gloomspore Valley                |
+| Basking Shark   | Epic      | 85         | 96kg       | 235.2kg    | Gloomspore Valley                |
+| Phantom Jelly   | Epic      | 145        | 28kg       | 92.4kg     | Gloomspore Valley                |
+| Alien           | Epic      | 140        | 40kg       | 117.6kg    | Gloomspore Valley                |
+| Thresher Shark  | Epic      | 82         | 48kg       | 151.2kg    | Gloomspore Valley                |
+| Angel           | Mythical  | 300        | 64kg       | 168kg      | Gloomspore Valley                |
 
 
 ## Mutations
 
-| Mutation    | Price Mult | Size Mult |
-| ----------- | ---------- | --------- |
-| Poop        | 0.33x      | 1.333x    |
-| Rock        | 1x         | 1.2x      |
-| Moss        | 1.1x       | 1x        |
-| Coral       | 1.1x       | 0.8x      |
-| Metal       | 1.2x       | 1.2x      |
-| Sand        | 1.25x      | 1x        |
-| Albino      | 1.3x       | 1x        |
-| Transparent | 1.35x      | 1x        |
-| Cactus      | 1.45x      | 1.3x      |
-| Banana      | 1.5x       | 1x        |
-| Spirit      | 1.7x       | 1.2x      |
-| Fossil      | 1.75x      | 0.9x      |
-| Golden      | 2x         | 1.2x      |
-| Negative    | 2x         | 1x        |
-| Fairy       | 2.3x       | 1.2x      |
-| Invisible   | 2.4x       | 1.4x      |
-| Liquid      | 2.5x       | 1.3x      |
-| Grounded    | 2.8x       | 1.2x      |
-| Neon        | 2.8x       | 1.2x      |
-| Ultraviolet | 3.6x       | 1.8x      |
-| Rooted      | 3.6x       | 1.5x      |
-| Toxic       | 3.75x      | 1.2x      |
-| Jade        | 4x         | 1x        |
-| Cupid       | 1.4x       | 1x        |
-| Lonely      | 2x         | 1x        |
-| Shadow      | 6.66x      | 1.11x     |
-| Angelic     | 7.77x      | 1.4x      |
-| Abyssal     | 8.5x       | 1.5x      |
+| Mutation    | Price Mult | Size Mult | Area              |
+| ----------- | ---------- | --------- | ----------------- |
+| Poop        | 0.33x      | 1.333x    | Any               |
+| Rock        | 1x         | 1.2x      | Forgotten Deep    |
+| Moss        | 1.1x       | 1x        | Forgotten Deep    |
+| Coral       | 1.1x       | 0.8x      | Any               |
+| Metal       | 1.2x       | 1.2x      | Any               |
+| Sand        | 1.25x      | 1x        | Ancient Sands     |
+| Albino      | 1.3x       | 1x        | Any               |
+| Transparent | 1.35x      | 1x        | Any               |
+| Cactus      | 1.45x      | 1.3x      | Ancient Sands     |
+| Banana      | 1.5x       | 1x        | Sunken Wilds      |
+| Spirit      | 1.7x       | 1.2x      | Spirit Roots      |
+| Fossil      | 1.75x      | 0.9x      | Ancient Sands     |
+| Golden      | 2x         | 1.2x      | Any               |
+| Negative    | 2x         | 1x        | Any               |
+| Fairy       | 2.3x       | 1.2x      | Spirit Roots      |
+| Invisible   | 2.4x       | 1.4x      | Any               |
+| Liquid      | 2.5x       | 1.3x      | Any               |
+| Grounded    | 2.8x       | 1.2x      | Sunken Wilds      |
+| Neon        | 2.8x       | 1.2x      | Any               |
+| Ultraviolet | 3.6x       | 1.8x      | Any               |
+| Rooted      | 3.6x       | 1.5x      | Spirit Roots      |
+| Toxic       | 3.75x      | 1.2x      | Any               |
+| Jade        | 4x         | 1x        | Sunken Wilds      |
+| Spore       | 2x         | 1.2x      | Gloomspore Valley |
+| Amber       | 2.8x       | 0.8x      | Gloomspore Valley |
+| Crystal     | 4.2x       | 1.2x      | Gloomspore Valley |
+| Gloomy      | 6.8x       | 1.3x      | Gloomspore Valley |
+| Cupid       | 1.4x       | 1x        | Any               |
+| Lonely      | 2x         | 1x        | Any               |
+| Shadow      | 6.66x      | 1.11x     | Any               |
+| Angelic     | 7.77x      | 1.4x      | Any               |
+| Abyssal     | 8.5x       | 1.5x      | Any               |
 
 
 ## Cycle Times

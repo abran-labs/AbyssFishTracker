@@ -4,11 +4,12 @@ export type FishArea =
   | "Ancient Sands"
   | "Spirit Roots"
   | "Angler Cave"
-  | "Sunken Wilds";
+  | "Sunken Wilds"
+  | "Gloomspore Valley";
 
 export interface FishSpecies {
   name: string;
-  rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary";
+  rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Mythical" | "Secret";
   baseValue: number;
   minWeight: number;
   maxWeight: number;

@@ -181,8 +181,8 @@ export default function Home() {
 
             <TabsContent value="calculator">
               <CalculatorTab />
-              <p className="mt-6 text-sm text-muted-foreground text-center">
-                🎉 Thanks for 1000+ fish calculated!
+              <p className="mt-6 text-sm text-muted-foreground text-center italic">
+                🍄 The calculator has been updated to include the new <span style={{ color: "rgb(189, 135, 204)" }}>Gloomspore Valley</span>!
               </p>
             </TabsContent>
 
