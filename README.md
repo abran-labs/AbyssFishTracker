@@ -26,3 +26,15 @@ Manage your pond lineup and figure out the best swaps.
 
 
 *Your email is only used for authentication and will never be shared with third parties.*
+
+## Roadmap
+
+1. Switch to Discord login instead of email
+2. Share your pond with friends via a public link
+3. Like other players' ponds
+4. Leaderboards (maybe)
+    - Most liked ponds
+    - Most valuable ponds
+    - Most legendary fish
+    - Most valuable fish
+    - Etc.
