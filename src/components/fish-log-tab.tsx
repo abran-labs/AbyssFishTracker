@@ -315,8 +315,8 @@ export function FishLogTab({
   };
 
   const allValues = React.useMemo(
-    () => entries.map((e) => e.value),
-    [entries]
+    () => entries.map((e) => Math.round(e.value * (cashBonus + 1))),
+    [entries, cashBonus]
   );
 
   const sortProps = {
@@ -376,8 +376,8 @@ export function FishLogTab({
                     <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
                       {entry.mutation}
                     </TableCell>
-                    <TableCell className="text-right font-medium" style={{ color: getValueColor(entry.value, allValues) }}>
-                      ${entry.value.toLocaleString()}
+                    <TableCell className="text-right font-medium" style={{ color: getValueColor(Math.round(entry.value * (cashBonus + 1)), allValues) }}>
+                      ${Math.round(entry.value * (cashBonus + 1)).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-medium" style={{ color: getValueColor(roeMap.get(entry.id) ?? 0, [...roeMap.values()]) }}>
                       ${(roeMap.get(entry.id) ?? 0).toLocaleString()}/hr

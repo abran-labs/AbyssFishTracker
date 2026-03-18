@@ -167,8 +167,6 @@ export function FishPondTab({
     return map;
   }, [sorted]);
 
-  const allValues = React.useMemo(() => entries.map((e) => e.value), [entries]);
-
   const globalSettings = React.useMemo(() => ({
     race: settings.race,
     artifact1: settings.artifact1,
@@ -189,6 +187,8 @@ export function FishPondTab({
       boostMultiplier: cashMultiplier * (1 + speed),
     };
   }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3, settings.decorationLevel]);
+
+  const allValues = React.useMemo(() => entries.map((e) => Math.round(e.value * (cashBonus + 1))), [entries, cashBonus]);
 
   const valueLabel = cashBonus > 0.00005
     ? `Value (+${Number((cashBonus * 100).toFixed(4))}%)`
@@ -354,9 +354,9 @@ export function FishPondTab({
                           </span>
                           <span
                             className="text-xs font-semibold shrink-0"
-                            style={{ color: getValueColor(wantFish.value, allValues) }}
+                            style={{ color: getValueColor(Math.round(wantFish.value * (cashBonus + 1)), allValues) }}
                           >
-                            ${wantFish.value.toLocaleString()}
+                            ${Math.round(wantFish.value * (cashBonus + 1)).toLocaleString()}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
@@ -379,9 +379,9 @@ export function FishPondTab({
                           </span>
                           <span
                             className="text-xs font-semibold shrink-0"
-                            style={{ color: getValueColor(haveFish.value, allValues) }}
+                            style={{ color: getValueColor(Math.round(haveFish.value * (cashBonus + 1)), allValues) }}
                           >
-                            ${haveFish.value.toLocaleString()}
+                            ${Math.round(haveFish.value * (cashBonus + 1)).toLocaleString()}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
@@ -515,9 +515,9 @@ export function FishPondTab({
                       </TableCell>
                       <TableCell
                         className="text-right font-medium"
-                        style={{ color: getValueColor(entry.value, allValues) }}
+                        style={{ color: getValueColor(Math.round(entry.value * (cashBonus + 1)), allValues) }}
                       >
-                        ${entry.value.toLocaleString()}
+                        ${Math.round(entry.value * (cashBonus + 1)).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-medium" style={{ color: getValueColor(getDisplayRoe(entry), allRoeValues) }}>
                         ${getDisplayRoe(entry).toLocaleString()}/hr
