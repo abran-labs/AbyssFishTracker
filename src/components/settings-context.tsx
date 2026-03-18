@@ -10,6 +10,8 @@ export interface SettingsContextValue {
     artifact3: string;
     roeStorageLevel: number;
     decorationLevel: number;
+    pondSortNoticeDismissed: boolean;
+    ignoredSwapFishIds: string[];
     updateSettings: (partial: Partial<UserSettingsData>) => void;
     loaded: boolean;
 }
@@ -21,6 +23,8 @@ const DEFAULT: SettingsContextValue = {
     artifact3: "None",
     roeStorageLevel: 0,
     decorationLevel: 0,
+    pondSortNoticeDismissed: false,
+    ignoredSwapFishIds: [],
     updateSettings: () => { },
     loaded: false,
 };
@@ -60,6 +64,8 @@ export function SettingsProvider({ children, isLoggedIn }: SettingsProviderProps
         artifact3: "None",
         roeStorageLevel: 0,
         decorationLevel: 0,
+        pondSortNoticeDismissed: false,
+        ignoredSwapFishIds: [],
     });
     const [loaded, setLoaded] = React.useState(false);
 
@@ -67,8 +73,26 @@ export function SettingsProvider({ children, isLoggedIn }: SettingsProviderProps
     React.useEffect(() => {
         if (isLoggedIn) {
             getServerSettings().then((serverSettings) => {
-                setSettings(serverSettings);
-                saveToLocalStorage(serverSettings);
+                if (serverSettings === null) {
+                    // New account — migrate any existing localStorage values into the DB
+                    const local = loadFromLocalStorage();
+                    const migrated: UserSettingsData = {
+                        race: local.race ?? "None",
+                        artifact1: local.artifact1 ?? "None",
+                        artifact2: local.artifact2 ?? "None",
+                        artifact3: local.artifact3 ?? "None",
+                        roeStorageLevel: local.roeStorageLevel ?? 0,
+                        decorationLevel: local.decorationLevel ?? 0,
+                        pondSortNoticeDismissed: false,
+                        ignoredSwapFishIds: [],
+                    };
+                    setSettings(migrated);
+                    saveToLocalStorage(migrated);
+                    saveServerSettings(migrated).catch(() => { });
+                } else {
+                    setSettings(serverSettings);
+                    saveToLocalStorage(serverSettings);
+                }
                 setLoaded(true);
             }).catch(() => {
                 const local = loadFromLocalStorage();

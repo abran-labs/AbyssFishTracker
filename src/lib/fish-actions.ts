@@ -160,6 +160,8 @@ export interface UserSettingsData {
   artifact3: string;
   roeStorageLevel: number;
   decorationLevel: number;
+  pondSortNoticeDismissed: boolean;
+  ignoredSwapFishIds: string[];
 }
 
 const DEFAULT_SETTINGS: UserSettingsData = {
@@ -169,14 +171,17 @@ const DEFAULT_SETTINGS: UserSettingsData = {
   artifact3: "None",
   roeStorageLevel: 0,
   decorationLevel: 0,
+  pondSortNoticeDismissed: false,
+  ignoredSwapFishIds: [],
 };
 
-export async function getServerSettings(): Promise<UserSettingsData> {
+// Returns null if no settings record exists yet (new account — caller should migrate from localStorage)
+export async function getServerSettings(): Promise<UserSettingsData | null> {
   const { userId } = await requireUser();
   const settings = await prisma.userSettings.findUnique({
     where: { userId },
   });
-  if (!settings) return DEFAULT_SETTINGS;
+  if (!settings) return null;
   return {
     race: settings.race,
     artifact1: settings.artifact1,
@@ -184,6 +189,8 @@ export async function getServerSettings(): Promise<UserSettingsData> {
     artifact3: settings.artifact3,
     roeStorageLevel: settings.roeStorageLevel,
     decorationLevel: settings.decorationLevel,
+    pondSortNoticeDismissed: settings.pondSortNoticeDismissed,
+    ignoredSwapFishIds: settings.ignoredSwapFishIds,
   };
 }
 
@@ -203,5 +210,7 @@ export async function saveServerSettings(
     artifact3: settings.artifact3,
     roeStorageLevel: settings.roeStorageLevel,
     decorationLevel: settings.decorationLevel,
+    pondSortNoticeDismissed: settings.pondSortNoticeDismissed,
+    ignoredSwapFishIds: settings.ignoredSwapFishIds,
   };
 }

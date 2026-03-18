@@ -202,7 +202,6 @@ export default function Home() {
                   snapshot={pondSnapshot}
                   onUpdateSnapshot={handleUpdatePondSnapshot}
                   onPondSizeChange={handlePondSizeChange}
-                  isActive={activeTab === "pond"}
                 />
               ) : (
                 <Card>

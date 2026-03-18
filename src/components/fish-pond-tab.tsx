@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/data-table";
 import { Button } from "@/components/ui/button";
 import { IconArrowRight } from "@tabler/icons-react";
+import { useToast } from "@/components/ui/toast-context";
 
 const POND_SIZES = [6, 8, 10, 12, 14, 16, 18]; // This array is no longer used directly for the Select options, but kept for reference if needed elsewhere.
 
@@ -98,7 +99,6 @@ interface FishPondTabProps {
   snapshot: PondSnapshotData | null;
   onUpdateSnapshot: (fishIds: string[], pondSize: number) => Promise<void>;
   onPondSizeChange: (size: number) => Promise<void>;
-  isActive: boolean;
 }
 
 export function FishPondTab({
@@ -106,34 +106,18 @@ export function FishPondTab({
   snapshot,
   onUpdateSnapshot,
   onPondSizeChange,
-  isActive,
 }: FishPondTabProps) {
   const settings = useSettings();
+  const { addToast, removeToast } = useToast();
   const [autoSaved, setAutoSaved] = React.useState(false);
   const [pondSize, setPondSize] = React.useState(snapshot?.pondSize ?? 6);
-  const [showSortNotice, setShowSortNotice] = React.useState(false);
-  const swapsDismissKey = snapshot ? `pondSwapsDismissed-${snapshot.createdAt}` : null;
-  const [swapsDismissed, setSwapsDismissed] = React.useState(() => {
-    if (typeof window === "undefined" || !snapshot) return false;
-    return !!localStorage.getItem(`pondSwapsDismissed-${snapshot.createdAt}`);
-  });
+  const [swapsDismissed, setSwapsDismissed] = React.useState(false);
 
   React.useEffect(() => {
     if (snapshot?.pondSize && snapshot.pondSize !== pondSize) {
       setPondSize(snapshot.pondSize);
     }
   }, [snapshot?.pondSize, pondSize]);
-
-  React.useEffect(() => {
-    if (isActive && !localStorage.getItem("pondSortNoticeDismissed")) {
-      setShowSortNotice(true);
-    }
-  }, [isActive]);
-
-  const dismissSortNotice = () => {
-    localStorage.setItem("pondSortNoticeDismissed", "true");
-    setShowSortNotice(false);
-  };
 
   // 1) Sort ALL user's fish by base Roe $/hr instead of value
   const sorted = React.useMemo(() => {
@@ -218,22 +202,25 @@ export function FishPondTab({
     if (autoSaved) return;
     if (snapshot === null && idealPond.length > 0) {
       setAutoSaved(true);
-      // New user — mark notice as seen so they never see the "sorting changed" banner
-      localStorage.setItem("pondSortNoticeDismissed", "true");
+      // New user — dismiss the sort notice immediately, it's not relevant to them
+      if (!settings.pondSortNoticeDismissed) {
+        settings.updateSettings({ pondSortNoticeDismissed: true });
+      }
       onUpdateSnapshot(idealPond.map((f) => f.id), pondSize);
     }
   }, [snapshot, idealPond, pondSize, onUpdateSnapshot, autoSaved]);
 
-  // Compute pending swaps (diff between ideal and snapshot)
+  // Compute pending swaps (diff between ideal and snapshot), filtering out ignored fish
   const swaps = React.useMemo(() => {
     if (!snapshot || idealPond.length === 0) return [];
-    return computeSwaps(idealPond, snapshot, sorted);
-  }, [snapshot, idealPond, sorted]);
+    const all = computeSwaps(idealPond, snapshot, sorted);
+    const ignored = new Set(settings.ignoredSwapFishIds);
+    return all.filter((s) => !s.add || !ignored.has(s.add.id));
+  }, [snapshot, idealPond, sorted, settings.ignoredSwapFishIds]);
 
-  // When snapshot changes, re-check if the new snapshot's swaps are dismissed
+  // Reset dismiss state when snapshot changes (new snapshot = show swaps again)
   React.useEffect(() => {
-    if (typeof window === "undefined" || !snapshot) return;
-    setSwapsDismissed(!!localStorage.getItem(`pondSwapsDismissed-${snapshot.createdAt}`));
+    setSwapsDismissed(false);
   }, [snapshot?.createdAt]);
 
   const handleUpdatePond = React.useCallback(async () => {
@@ -306,8 +293,8 @@ export function FishPondTab({
         </div>
       </div>
 
-      {/* Sort Notice */}
-      {showSortNotice && (
+      {/* Pond Sort Notice */}
+      {!settings.pondSortNoticeDismissed && (
         <Card className="border-blue-500/50 bg-blue-500/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-blue-400">
@@ -319,7 +306,7 @@ export function FishPondTab({
               Your pond is now sorted by <strong>Roe $/hr</strong> instead of fish value.
               This is a more accurate metric for maximizing your passive income.
             </p>
-            <Button size="sm" variant="outline" onClick={dismissSortNotice}>
+            <Button size="sm" variant="outline" onClick={() => settings.updateSettings({ pondSortNoticeDismissed: true })}>
               Got it!
             </Button>
           </CardContent>
@@ -350,7 +337,7 @@ export function FishPondTab({
                             className="font-medium truncate"
                             style={{ color: getRarityColor(wantFish.fishName) }}
                           >
-                            {wantFish.fishName}
+                            {wantFish.fishName}{wantFish.mutation !== "None" && <span className="text-muted-foreground font-normal"> ({wantFish.mutation})</span>}
                           </span>
                           <span
                             className="text-xs font-semibold shrink-0"
@@ -375,7 +362,7 @@ export function FishPondTab({
                             className="font-medium truncate"
                             style={{ color: getRarityColor(haveFish.fishName) }}
                           >
-                            {haveFish.fishName}
+                            {haveFish.fishName}{haveFish.mutation !== "None" && <span className="text-muted-foreground font-normal"> ({haveFish.mutation})</span>}
                           </span>
                           <span
                             className="text-xs font-semibold shrink-0"
@@ -396,7 +383,7 @@ export function FishPondTab({
                   <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-green-500/5 px-3 py-2 border border-green-500/10">
                     <span className="text-green-400 shrink-0">Add:</span>
                     <span style={{ color: getRarityColor(wantFish.fishName) }}>
-                      {wantFish.fishName}
+                      {wantFish.fishName}{wantFish.mutation !== "None" && <span className="text-muted-foreground"> ({wantFish.mutation})</span>}
                     </span>
                     <span className="text-muted-foreground">
                       ({wantFish.weight}kg, ${wantFish.value.toLocaleString()})
@@ -411,7 +398,7 @@ export function FishPondTab({
                   <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-red-500/5 px-3 py-2 border border-red-500/10">
                     <span className="text-red-400 shrink-0">Remove:</span>
                     <span style={{ color: getRarityColor(haveFish.fishName) }}>
-                      {haveFish.fishName}
+                      {haveFish.fishName}{haveFish.mutation !== "None" && <span className="text-muted-foreground"> ({haveFish.mutation})</span>}
                     </span>
                     <span className="text-muted-foreground">
                       ({haveFish.weight}kg, ${haveFish.value.toLocaleString()})
@@ -438,8 +425,40 @@ export function FishPondTab({
                 variant="outline"
                 className="border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/30"
                 onClick={() => {
-                  if (swapsDismissKey) localStorage.setItem(swapsDismissKey, "true");
+                  // Collect the "add" fish IDs from each swap — these are the ignore keys
+                  const newIgnoredIds = swaps
+                    .map((s) => s.add?.id)
+                    .filter((id): id is string => !!id);
+                  const updatedIgnored = [
+                    ...settings.ignoredSwapFishIds,
+                    ...newIgnoredIds.filter((id) => !settings.ignoredSwapFishIds.includes(id)),
+                  ];
+                  settings.updateSettings({ ignoredSwapFishIds: updatedIgnored });
                   setSwapsDismissed(true);
+                  let undone = false;
+                  const toastId = addToast({
+                    variant: "info",
+                    title: "Swap Suggestions Ignored",
+                    description: `${newIgnoredIds.length} swap${newIgnoredIds.length !== 1 ? "s" : ""} will no longer be suggested.`,
+                    action: (
+                      <button
+                        onClick={() => {
+                          if (undone) return;
+                          undone = true;
+                          settings.updateSettings({
+                            ignoredSwapFishIds: settings.ignoredSwapFishIds.filter(
+                              (id) => !newIgnoredIds.includes(id)
+                            ),
+                          });
+                          setSwapsDismissed(false);
+                          removeToast(toastId);
+                        }}
+                        className="text-xs font-semibold underline underline-offset-2 hover:opacity-80"
+                      >
+                        Undo
+                      </button>
+                    ),
+                  });
                 }}
               >
                 Ignore
