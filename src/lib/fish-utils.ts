@@ -79,11 +79,10 @@ export function calculateBoostedRoePerHour(
   const art2 = ARTIFACTS.find((a) => a.name === globalSettings.artifact2);
   const art3 = ARTIFACTS.find((a) => a.name === globalSettings.artifact3);
   const cashMultiplier =
-    1 +
-    (race?.cashBonus ?? 0) +
-    (art1?.cashBonus ?? 0) +
-    (art2?.cashBonus ?? 0) +
-    (art3?.cashBonus ?? 0);
+    (1 + (race?.cashBonus ?? 0)) *
+    (1 + (art1?.cashBonus ?? 0)) *
+    (1 + (art2?.cashBonus ?? 0)) *
+    (1 + (art3?.cashBonus ?? 0));
 
   // Speed multiplier from decoration + feed
   const decoBonus = DECORATION_LEVELS[decorationLevel]?.speedBonus ?? 0;

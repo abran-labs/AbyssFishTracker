@@ -6,6 +6,23 @@
 baseWeight = round(displayedWeight / sizeMultiplier, 1)
 correctedWeight = baseWeight * sizeMultiplier
 Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultiplier)
+BoostedValue = round(Value * bonusMultiplier)
+```
+
+
+## Bonus Multiplier Formula
+
+Artifact and race bonuses are **multiplicative** with each other:
+
+```
+bonusMultiplier = (1 + artifact1Bonus) * (1 + artifact2Bonus) * (1 + artifact3Bonus) * (1 + raceBonus)
+bonusPercent = (bonusMultiplier - 1) * 100
+```
+
+Example: Two coins at +1.4% and +1.3%, plus Kraken race (+15%):
+```
+bonusMultiplier = 1.014 * 1.013 * 1.15 ≈ 1.18125
+bonusPercent ≈ 18.1%
 ```
 
 ## Roe $/hr Formula

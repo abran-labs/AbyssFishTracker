@@ -181,12 +181,12 @@ export function FishPondTab({
     const a1 = ARTIFACTS.find((a) => a.name === settings.artifact1)?.cashBonus ?? 0;
     const a2 = ARTIFACTS.find((a) => a.name === settings.artifact2)?.cashBonus ?? 0;
     const a3 = ARTIFACTS.find((a) => a.name === settings.artifact3)?.cashBonus ?? 0;
-    const cash = r + a1 + a2 + a3;
+    const cashMultiplier = (1 + r) * (1 + a1) * (1 + a2) * (1 + a3);
     const speed = DECORATION_LEVELS[settings.decorationLevel]?.speedBonus ?? 0;
     return {
-      cashBonus: cash,
+      cashBonus: cashMultiplier - 1,
       speedBonus: speed,
-      boostMultiplier: (1 + cash) * (1 + speed),
+      boostMultiplier: cashMultiplier * (1 + speed),
     };
   }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3, settings.decorationLevel]);
 
