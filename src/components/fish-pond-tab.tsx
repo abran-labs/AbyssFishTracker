@@ -190,12 +190,12 @@ export function FishPondTab({
     };
   }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3, settings.decorationLevel]);
 
-  const valueLabel = cashBonus > 0.0005
-    ? `Value (+${(cashBonus * 100).toFixed(1)}%)`
+  const valueLabel = cashBonus > 0.00005
+    ? `Value (+${Number((cashBonus * 100).toFixed(4))}%)`
     : "Value";
 
-  const roeLabel = (cashBonus + speedBonus) > 0.0005
-    ? `Roe $/hr (+${((cashBonus + speedBonus) * 100).toFixed(1)}%)`
+  const roeLabel = (cashBonus + speedBonus) > 0.00005
+    ? `Roe $/hr (+${Number(((cashBonus + speedBonus) * 100).toFixed(4))}%)`
     : "Roe $/hr";
 
   const getDisplayRoe = React.useCallback((entry: FishEntry) => {

@@ -34,7 +34,7 @@ function ArtifactSlot({
 
     const triggerColor = baseType === "The King's Fortune" ? KINGS_COLOR
         : isCoins ? getCoinColor(currentTier)
-        : undefined;
+            : undefined;
 
     return (
         <div className="flex items-center gap-1">
@@ -140,7 +140,7 @@ export function GlobalSettingsBar() {
                 <>
                     <span className="text-border/60 shrink-0">·</span>
                     <span className="font-semibold text-amber-400 tabular-nums shrink-0">
-                        +{(totalBonus * 100).toFixed(1)}%
+                        +{Number((totalBonus * 100).toFixed(4))}%
                     </span>
                 </>
             )}

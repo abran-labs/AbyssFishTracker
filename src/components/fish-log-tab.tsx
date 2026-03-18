@@ -145,12 +145,12 @@ export function FishLogTab({
     };
   }, [race, artifact1, artifact2, artifact3, decorationLevel]);
 
-  const valueLabel = cashBonus > 0.0005
-    ? `Value (+${(cashBonus * 100).toFixed(1)}%)`
+  const valueLabel = cashBonus > 0.00005
+    ? `Value (+${Number((cashBonus * 100).toFixed(4))}%)`
     : "Value";
 
-  const roeLabel = (cashBonus + speedBonus) > 0.0005
-    ? `Roe $/hr (+${((cashBonus + speedBonus) * 100).toFixed(1)}%)`
+  const roeLabel = (cashBonus + speedBonus) > 0.00005
+    ? `Roe $/hr (+${Number(((cashBonus + speedBonus) * 100).toFixed(4))}%)`
     : "Roe $/hr";
 
   const handleSort = (key: SortKey) => {

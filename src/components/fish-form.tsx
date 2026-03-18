@@ -306,7 +306,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
         const boostedValue = Math.round(formData.value * cashMultiplier);
 
         const boostPct = hasActiveBoosts
-          ? `+${((cashMultiplier - 1) * 100).toFixed(1)}%`
+          ? `+${Number(((cashMultiplier - 1) * 100).toFixed(4))}%`
           : null;
 
         return (
