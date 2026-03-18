@@ -64,11 +64,39 @@ interface FishFormProps {
   };
 }
 
-const AREA_ORDER = ["Sunken Wilds", "Angler Cave", "Spirit Roots", "Ancient Sands", "Ocean", "Forgotten Deep"] as const;
+const AREA_ORDER = [
+  "Gloomspore Valley",
+  "Sunken Wilds",
+  "Angler Cave",
+  "Spirit Roots",
+  "Ancient Sands",
+  "Ocean",
+  "Forgotten Deep",
+] as const;
 
-const RARITY_RANK: Record<string, number> = { Legendary: 0, Epic: 1, Rare: 2, Uncommon: 3, Common: 4 };
+const RARITY_RANK: Record<string, number> = {
+  Secret: 0,
+  Mythical: 1,
+  Legendary: 2,
+  Epic: 3,
+  Rare: 4,
+  Uncommon: 5,
+  Common: 6,
+};
 
-const fishOptions = AREA_ORDER.flatMap((area) =>
+// Automatically derive areas from FISH_SPECIES to ensure new areas are never missed
+const displayAreas = Array.from(
+  new Set(FISH_SPECIES.flatMap((f) => f.areas))
+).sort((a, b) => {
+  const indexA = AREA_ORDER.indexOf(a as any);
+  const indexB = AREA_ORDER.indexOf(b as any);
+  if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+  if (indexA === -1) return 1; // Put unknowns at bottom
+  if (indexB === -1) return -1;
+  return indexA - indexB;
+});
+
+const fishOptions = displayAreas.flatMap((area) =>
   FISH_SPECIES.filter((f) => f.areas.includes(area))
     .sort((a, b) => RARITY_RANK[a.rarity] - RARITY_RANK[b.rarity])
     .map((f) => ({
