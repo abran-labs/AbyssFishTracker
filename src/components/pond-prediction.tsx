@@ -60,7 +60,7 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
         const a1 = ARTIFACTS.find((a) => a.name === settings.artifact1)?.cashBonus ?? 0;
         const a2 = ARTIFACTS.find((a) => a.name === settings.artifact2)?.cashBonus ?? 0;
         const a3 = ARTIFACTS.find((a) => a.name === settings.artifact3)?.cashBonus ?? 0;
-        return (1 + r) * (1 + a1) * (1 + a2) * (1 + a3);
+        return (1 + (a1 + a2 + a3)) * (1 + r);
     }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3]);
 
     // Income rate $/hr (speed + cash + offline) — shown to user

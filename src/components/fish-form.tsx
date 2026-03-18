@@ -298,11 +298,13 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
           : baseRoe;
 
         // Boosted sell price (race + artifacts affect fish sell value too)
+        const artBonusRaw =
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact1)?.cashBonus ?? 0) +
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact2)?.cashBonus ?? 0) +
+          (ARTIFACTS.find((a) => a.name === globalSettings.artifact3)?.cashBonus ?? 0);
         const cashMultiplier =
           (1 + (RACES.find((r) => r.name === globalSettings.race)?.cashBonus ?? 0)) *
-          (1 + (ARTIFACTS.find((a) => a.name === globalSettings.artifact1)?.cashBonus ?? 0)) *
-          (1 + (ARTIFACTS.find((a) => a.name === globalSettings.artifact2)?.cashBonus ?? 0)) *
-          (1 + (ARTIFACTS.find((a) => a.name === globalSettings.artifact3)?.cashBonus ?? 0));
+          (1 + artBonusRaw);
         const boostedValue = Math.round(formData.value * cashMultiplier);
 
         const boostPct = hasActiveBoosts

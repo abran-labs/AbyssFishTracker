@@ -181,7 +181,7 @@ export function FishPondTab({
     const a1 = ARTIFACTS.find((a) => a.name === settings.artifact1)?.cashBonus ?? 0;
     const a2 = ARTIFACTS.find((a) => a.name === settings.artifact2)?.cashBonus ?? 0;
     const a3 = ARTIFACTS.find((a) => a.name === settings.artifact3)?.cashBonus ?? 0;
-    const cashMultiplier = (1 + r) * (1 + a1) * (1 + a2) * (1 + a3);
+    const cashMultiplier = (1 + (a1 + a2 + a3)) * (1 + r);
     const speed = DECORATION_LEVELS[settings.decorationLevel]?.speedBonus ?? 0;
     return {
       cashBonus: cashMultiplier - 1,

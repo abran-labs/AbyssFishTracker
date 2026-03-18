@@ -12,17 +12,12 @@ BoostedValue = round(Value * bonusMultiplier)
 
 ## Bonus Multiplier Formula
 
-Artifact and race bonuses are **multiplicative** with each other:
+Artifact bonuses are **additive** with each other, then **multiplicative** with the race bonus:
 
 ```
-bonusMultiplier = (1 + artifact1Bonus) * (1 + artifact2Bonus) * (1 + artifact3Bonus) * (1 + raceBonus)
+artifactTotal = artifact1Bonus + artifact2Bonus + artifact3Bonus
+bonusMultiplier = (1 + artifactTotal) * (1 + raceBonus)
 bonusPercent = (bonusMultiplier - 1) * 100
-```
-
-Example: Two coins at +1.4% and +1.3%, plus Kraken race (+15%):
-```
-bonusMultiplier = 1.014 * 1.013 * 1.15 ≈ 1.18125
-bonusPercent ≈ 18.1%
 ```
 
 ## Roe $/hr Formula

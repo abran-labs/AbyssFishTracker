@@ -85,7 +85,8 @@ export function GlobalSettingsBar() {
         const a1 = ARTIFACTS.find(a => a.name === artifact1)?.cashBonus || 0;
         const a2 = ARTIFACTS.find(a => a.name === artifact2)?.cashBonus || 0;
         const a3 = ARTIFACTS.find(a => a.name === artifact3)?.cashBonus || 0;
-        return (1 + r) * (1 + a1) * (1 + a2) * (1 + a3) - 1;
+        const totalArtifacts = a1 + a2 + a3;
+        return (1 + r) * (1 + totalArtifacts) - 1;
     }, [race, artifact1, artifact2, artifact3]);
 
     const kingsFortuneUsed =
