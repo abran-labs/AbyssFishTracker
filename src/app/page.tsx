@@ -27,6 +27,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FooterSection } from "@/components/footer-section";
 
+const ACTIVE_TAB_KEY = "activeTab";
+const VALID_TABS = ["calculator", "log", "pond"];
+
 export default function Home() {
   const { user, loading, logout } = useAuth();
   const [entries, setEntries] = React.useState<FishEntry[]>([]);
@@ -38,6 +41,18 @@ export default function Home() {
   const [calculatedCount, setCalculatedCount] = React.useState<number | null>(null);
   const [pendingCalculations, setPendingCalculations] = React.useState(0);
   const [showLogin, setShowLogin] = React.useState(false);
+
+  React.useEffect(() => {
+    const saved = localStorage.getItem(ACTIVE_TAB_KEY);
+    if (saved && VALID_TABS.includes(saved)) {
+      setActiveTab(saved);
+    }
+  }, []);
+
+  const handleTabChange = React.useCallback((tab: string) => {
+    setActiveTab(tab);
+    localStorage.setItem(ACTIVE_TAB_KEY, tab);
+  }, []);
 
   React.useEffect(() => {
     // Sync with local pending calculations for optimistic UI
@@ -154,7 +169,7 @@ export default function Home() {
 
       <main className="flex-1 px-6 py-6 max-w-5xl mx-auto w-full">
         <SettingsProvider isLoggedIn={!!user}>
-          <Tabs defaultValue="calculator" onValueChange={setActiveTab}>
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
             <div className="flex flex-col gap-2 mb-3">
               <TabsList className="self-start">
                 <TabsTrigger value="calculator">Calculator</TabsTrigger>
