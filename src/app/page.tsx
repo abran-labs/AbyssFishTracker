@@ -182,7 +182,7 @@ export default function Home() {
             <TabsContent value="calculator">
               <CalculatorTab />
               <p className="mt-6 text-sm text-muted-foreground text-center">
-                Sorry for the downtime earlier today — hope this update makes up for it!
+                🎉 Thanks for 1000+ fish calculated!
               </p>
             </TabsContent>
 
