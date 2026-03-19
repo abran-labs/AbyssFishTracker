@@ -11,9 +11,10 @@ export interface FishSpecies {
   name: string;
   rarity: "Common" | "Uncommon" | "Rare" | "Epic" | "Legendary" | "Mythical" | "Secret";
   baseValue: number;
-  minWeight: number;
-  maxWeight: number;
+  baseMinWeight: number;
+  baseMaxWeight: number;
   areas: FishArea[];
+  pondable?: boolean;
 }
 
 export interface Mutation {
@@ -36,7 +37,6 @@ export interface FishEntry {
   stars: number;
   mutation: string;
   value: number;
-  optimization: number;
   createdAt: string;
   updatedAt: string;
 }

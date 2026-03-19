@@ -1,0 +1,415 @@
+{
+  "Blobfish": {
+    "baseMinWeight": 8.0,
+    "baseMaxWeight": 20.0,
+    "areas": [
+      "Ocean"
+    ]
+  },
+  "Bluefin Tuna": {
+    "baseMinWeight": 150.0,
+    "baseMaxWeight": 200.0,
+    "areas": [
+      "Ocean"
+    ]
+  },
+  "Piranha": {
+    "baseMinWeight": 5.0,
+    "baseMaxWeight": 12.0,
+    "areas": [
+      "Ocean"
+    ]
+  },
+  "Sea Horse": {
+    "baseMinWeight": 0.5,
+    "baseMaxWeight": 1.0,
+    "areas": [
+      "Ocean"
+    ]
+  },
+  "Barracuda": {
+    "baseMinWeight": 6.0,
+    "baseMaxWeight": 12.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Blue Tang": {
+    "baseMinWeight": 0.5,
+    "baseMaxWeight": 1.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Clownfish": {
+    "baseMinWeight": 1.0,
+    "baseMaxWeight": 2.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Inflated Pufferfish": {
+    "baseMinWeight": 2.0,
+    "baseMaxWeight": 4.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Lionfish": {
+    "baseMinWeight": 2.0,
+    "baseMaxWeight": 6.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Mahi Mahi": {
+    "baseMinWeight": 8.0,
+    "baseMaxWeight": 20.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Pufferfish": {
+    "baseMinWeight": 2.0,
+    "baseMaxWeight": 4.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Salmon": {
+    "baseMinWeight": 4.0,
+    "baseMaxWeight": 8.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Tang": {
+    "baseMinWeight": 0.5,
+    "baseMaxWeight": 1.0,
+    "areas": [
+      "Forgotten Deep"
+    ]
+  },
+  "Ancient Shark": {
+    "baseMinWeight": 90.0,
+    "baseMaxWeight": 130.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Bigmouthfish": {
+    "baseMinWeight": 20.0,
+    "baseMaxWeight": 50.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Blackfin Tuna": {
+    "baseMinWeight": 6.0,
+    "baseMaxWeight": 16.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Cavefish": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 80.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Cod": {
+    "baseMinWeight": 4.0,
+    "baseMaxWeight": 12.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Grouper": {
+    "baseMinWeight": 6.0,
+    "baseMaxWeight": 14.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Pompano": {
+    "baseMinWeight": 2.0,
+    "baseMaxWeight": 8.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Scorpionfish": {
+    "baseMinWeight": 4.0,
+    "baseMaxWeight": 8.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Shark": {
+    "baseMinWeight": 20.0,
+    "baseMaxWeight": 70.0,
+    "areas": [
+      "Ancient Sands"
+    ]
+  },
+  "Dragonfish": {
+    "baseMinWeight": 150.0,
+    "baseMaxWeight": 250.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Eyefish": {
+    "baseMinWeight": 20.0,
+    "baseMaxWeight": 45.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Hammer Shark": {
+    "baseMinWeight": 40.0,
+    "baseMaxWeight": 80.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Jellyfish": {
+    "baseMinWeight": 4.0,
+    "baseMaxWeight": 10.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Napoleon": {
+    "baseMinWeight": 10.0,
+    "baseMaxWeight": 25.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Narwhal": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 50.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Pacific Fanfish": {
+    "baseMinWeight": 5.0,
+    "baseMaxWeight": 12.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Sailfish": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 60.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Sunfish": {
+    "baseMinWeight": 20.0,
+    "baseMaxWeight": 40.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Whale": {
+    "baseMinWeight": 120.0,
+    "baseMaxWeight": 220.0,
+    "areas": [
+      "Spirit Roots"
+    ]
+  },
+  "Anglerfish": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 60.0,
+    "areas": [
+      "Angler Cave"
+    ]
+  },
+  "King Anglerfish": {
+    "baseMinWeight": 150.0,
+    "baseMaxWeight": 250.0,
+    "areas": [
+      "Angler Cave"
+    ]
+  },
+  "Discus": {
+    "baseMinWeight": 6.0,
+    "baseMaxWeight": 14.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Jaguar Shark": {
+    "baseMinWeight": 70.0,
+    "baseMaxWeight": 110.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Mosasaurus": {
+    "baseMinWeight": 150.0,
+    "baseMaxWeight": 240.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Pelican Eel": {
+    "baseMinWeight": 175.0,
+    "baseMaxWeight": 285.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Sacabambaspis": {
+    "baseMinWeight": 22.0,
+    "baseMaxWeight": 42.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Sea Turtle": {
+    "baseMinWeight": 60.0,
+    "baseMaxWeight": 85.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Tambaqui": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 45.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Toucan Fish": {
+    "baseMinWeight": 25.0,
+    "baseMaxWeight": 40.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Trout": {
+    "baseMinWeight": 10.0,
+    "baseMaxWeight": 20.0,
+    "areas": [
+      "Sunken Wilds"
+    ]
+  },
+  "Alien": {
+    "baseMinWeight": 50.0,
+    "baseMaxWeight": 70.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Angel": {
+    "baseMinWeight": 80.0,
+    "baseMaxWeight": 100.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Atlantic Octopus": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 45.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Basking Shark": {
+    "baseMinWeight": 120.0,
+    "baseMaxWeight": 140.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Boxfish": {
+    "baseMinWeight": 8.0,
+    "baseMaxWeight": 18.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Catfish": {
+    "baseMinWeight": 30.0,
+    "baseMaxWeight": 45.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Largemouth Bass": {
+    "baseMinWeight": 25.0,
+    "baseMaxWeight": 35.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Manta Ray": {
+    "baseMinWeight": 70.0,
+    "baseMaxWeight": 100.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Orca": {
+    "baseMinWeight": 200.0,
+    "baseMaxWeight": 280.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Phantom Jelly": {
+    "baseMinWeight": 35.0,
+    "baseMaxWeight": 55.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Sea Angel": {
+    "baseMinWeight": 260.0,
+    "baseMaxWeight": 320.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Sockeye Salmon": {
+    "baseMinWeight": 20.0,
+    "baseMaxWeight": 30.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Squid": {
+    "baseMinWeight": 10.0,
+    "baseMaxWeight": 16.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Stingray": {
+    "baseMinWeight": 12.0,
+    "baseMaxWeight": 24.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Surubim": {
+    "baseMinWeight": 40.0,
+    "baseMaxWeight": 55.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  },
+  "Thresher Shark": {
+    "baseMinWeight": 60.0,
+    "baseMaxWeight": 90.0,
+    "areas": [
+      "Gloomspore Valley"
+    ]
+  }
+}

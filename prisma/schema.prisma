@@ -40,7 +40,6 @@ model FishEntry {
   stars        Int
   mutation     String
   value        Float
-  optimization Float
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

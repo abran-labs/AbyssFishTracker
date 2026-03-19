@@ -171,8 +171,8 @@ export function FishLogTab({
   const roeMap = React.useMemo(() => {
     const map = new Map<string, number>();
     for (const entry of entries) {
-      const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
-      if (fish) {
+      const fish = FISH_SPECIES.find((f) => f.name === entry.fishName.replace(/ \((Meat|Head)\)$/, ""));
+      if (fish && fish.pondable !== false) {
         const hasMutation = entry.mutation !== "None";
         const base = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
         map.set(entry.id, Math.round(base * boostMultiplier));
@@ -247,7 +247,6 @@ export function FishLogTab({
       stars: formData.stars,
       mutation: formData.mutation,
       value: formData.value,
-      optimization: formData.optimization,
     };
 
     if (editingEntry) {

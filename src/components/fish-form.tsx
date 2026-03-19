@@ -16,7 +16,6 @@ import {
 } from "@/lib/fish-config";
 import {
   calculateValue,
-  calculateOptimization,
   validateWeight,
   calculateBaseRoePerHour,
   calculateBoostedRoePerHour,
@@ -40,7 +39,6 @@ export interface FishFormData {
   stars: number;
   mutation: string;
   value: number;
-  optimization: number;
 }
 
 interface FishFormProps {
@@ -108,8 +106,16 @@ const fishOptions = displayAreas.flatMap((area) =>
     }))
 );
 
+function parseInitialFishName(name?: string): { baseName: string; dropType: "Meat" | "Head" } {
+  if (name?.endsWith(" (Head)")) return { baseName: name.slice(0, -7), dropType: "Head" };
+  if (name?.endsWith(" (Meat)")) return { baseName: name.slice(0, -7), dropType: "Meat" };
+  return { baseName: name ?? "", dropType: "Meat" };
+}
+
 export function FishForm({ renderActions, initialData, settings }: FishFormProps) {
-  const [fishName, setFishName] = React.useState(initialData?.fishName ?? "");
+  const { baseName: initialBaseName, dropType: initialDropType } = parseInitialFishName(initialData?.fishName);
+  const [fishName, setFishName] = React.useState(initialBaseName);
+  const [dropType, setDropType] = React.useState<"Meat" | "Head">(initialDropType);
   const [weightStr, setWeightStr] = React.useState(
     initialData?.weight?.toString() ?? ""
   );
@@ -157,19 +163,28 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
   const selectedMutation = MUTATIONS.find((m) => m.name === mutation);
 
   const sizeMult = selectedMutation?.sizeMultiplier ?? 1;
+  const minSizeMult = Math.min(...MUTATIONS.map((m) => m.sizeMultiplier));
+  const maxSizeMult = Math.max(...MUTATIONS.map((m) => m.sizeMultiplier));
+  const isMiniBoss = selectedFish?.pondable === false;
+  const dropMultiplier = isMiniBoss && dropType === "Head" ? 2 : 1;
+  const pieceDivisor = isMiniBoss ? 3 : 1;
+  const effectiveStarMultiplier = isMiniBoss ? 1.0 : (selectedStar?.multiplier ?? null);
+  const effectiveStars = isMiniBoss ? 3 : selectedStar?.value ?? null;
+
   const weightValidation =
     selectedFish && weightStr
       ? validateWeight(
         weight,
-        Math.round(selectedFish.minWeight * sizeMult * 10) / 10,
-        Math.round(selectedFish.maxWeight * sizeMult * 10) / 10
+        Math.round(selectedFish.baseMinWeight * minSizeMult / pieceDivisor * 10) / 10,
+        Math.round(selectedFish.baseMaxWeight * maxSizeMult / pieceDivisor * 10) / 10
       )
       : null;
 
   const formData = React.useMemo<FishFormData | null>(() => {
     if (
       !selectedFish ||
-      !selectedStar ||
+      effectiveStarMultiplier === null ||
+      effectiveStars === null ||
       !selectedMutation ||
       !weightValidation?.valid
     ) {
@@ -177,27 +192,30 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
     }
     const value = calculateValue(
       weight,
-      selectedFish.baseValue,
-      selectedStar.multiplier,
+      selectedFish.baseValue * dropMultiplier,
+      effectiveStarMultiplier,
       selectedMutation.multiplier,
       selectedMutation.sizeMultiplier
     );
-    const optimization = calculateOptimization(value, selectedFish);
+    const loggedName = isMiniBoss ? `${fishName} (${dropType})` : fishName;
     return {
-      fishName,
+      fishName: loggedName,
       weight,
-      stars: selectedStar.value,
+      stars: effectiveStars,
       mutation,
       value,
-      optimization,
     };
   }, [
     fishName,
+    dropType,
+    dropMultiplier,
+    isMiniBoss,
+    effectiveStarMultiplier,
+    effectiveStars,
     weight,
     stars,
     mutation,
     selectedFish,
-    selectedStar,
     selectedMutation,
     weightValidation,
   ]);
@@ -216,6 +234,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
 
   const reset = React.useCallback(() => {
     setFishName("");
+    setDropType("Meat");
     setWeightStr("");
     setStars("");
     setMutation("None");
@@ -236,6 +255,21 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
         />
       </div>
 
+      {isMiniBoss && (
+        <div className="space-y-2">
+          <Label>Drop Type</Label>
+          <Select value={dropType} onValueChange={(v) => setDropType(v as "Meat" | "Head")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Meat">Meat</SelectItem>
+              <SelectItem value="Head">Head (2x value)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label>Weight (kg)</Label>
         <Input
@@ -243,7 +277,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
           step="0.01"
           placeholder={
             selectedFish
-              ? `${Math.round(selectedFish.minWeight * sizeMult * 10) / 10} - ${Math.round(selectedFish.maxWeight * sizeMult * 10) / 10}`
+              ? `${Math.round(selectedFish.baseMinWeight * minSizeMult / pieceDivisor * 10) / 10} - ${Math.round(selectedFish.baseMaxWeight * maxSizeMult / pieceDivisor * 10) / 10}`
               : "Select a fish first"
           }
           value={weightStr}
@@ -262,34 +296,36 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
         />
         {weightValidation && !weightValidation.valid && selectedFish && (
           <p className="text-sm text-destructive">
-            {selectedFish.name} weight must be between {Math.round(selectedFish.minWeight * sizeMult * 10) / 10}kg
-            - {Math.round(selectedFish.maxWeight * sizeMult * 10) / 10}kg
+            {selectedFish.name} weight must be between {Math.round(selectedFish.baseMinWeight * sizeMult / pieceDivisor * 10) / 10}kg
+            - {Math.round(selectedFish.baseMaxWeight * sizeMult / pieceDivisor * 10) / 10}kg
           </p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label>Stars</Label>
-        <Select
-          value={stars}
-          onValueChange={setStars}
-          open={activeDropdown === "stars"}
-          onOpenChange={(o) => setActiveDropdown(o ? "stars" : null)}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select stars..." />
-          </SelectTrigger>
-          <SelectContent>
-            {[...STAR_LEVELS].reverse().map((s) => (
-              <SelectItem key={s.value} value={s.value.toString()}>
-                <span style={s.value > 0 ? { color: STAR_COLOR } : undefined}>
-                  {s.label}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {!isMiniBoss && (
+        <div className="space-y-2">
+          <Label>Stars</Label>
+          <Select
+            value={stars}
+            onValueChange={setStars}
+            open={activeDropdown === "stars"}
+            onOpenChange={(o) => setActiveDropdown(o ? "stars" : null)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select stars..." />
+            </SelectTrigger>
+            <SelectContent>
+              {[...STAR_LEVELS].reverse().map((s) => (
+                <SelectItem key={s.value} value={s.value.toString()}>
+                  <span style={s.value > 0 ? { color: STAR_COLOR } : undefined}>
+                    {s.label}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <div className="space-y-2">
         <Label>Mutation</Label>
@@ -305,10 +341,11 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
       </div>
 
       {formData && (() => {
-        const fish = FISH_SPECIES.find((f) => f.name === formData.fishName);
+        const fish = FISH_SPECIES.find((f) => f.name === formData.fishName.replace(/ \((Meat|Head)\)$/, ""));
         const hasMutation = formData.mutation !== "None";
         const rarity = fish?.rarity ?? "Common";
-        const baseRoe = calculateBaseRoePerHour(formData.value, hasMutation, rarity);
+        const isPondable = fish?.pondable !== false;
+        const baseRoe = isPondable ? calculateBaseRoePerHour(formData.value, hasMutation, rarity) : null;
 
         const hasActiveBoosts = settings && (
           settings.race !== "None" ||
@@ -321,7 +358,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
           ? { race: settings.race, artifact1: settings.artifact1, artifact2: settings.artifact2, artifact3: settings.artifact3 }
           : { race: "None", artifact1: "None", artifact2: "None", artifact3: "None" };
 
-        const boostedRoe = settings
+        const boostedRoe = isPondable && baseRoe !== null && settings
           ? calculateBoostedRoePerHour(baseRoe, globalSettings, 0, 0, false)
           : baseRoe;
 
@@ -352,10 +389,12 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
                     <span className="text-muted-foreground">Sell Price</span>
                     <span className="font-semibold">${formData.value.toLocaleString()}</span>
                   </div>
+                  {baseRoe !== null && (
                   <div className="flex justify-between text-sm gap-2">
                     <span className="text-muted-foreground">Roe $/hr</span>
                     <span className="font-semibold">${baseRoe.toLocaleString()}/hr</span>
                   </div>
+                  )}
                 </div>
               </div>
 
@@ -370,10 +409,12 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
                       <span className="text-muted-foreground">Sell Price</span>
                       <span className="font-semibold text-amber-400">${boostedValue.toLocaleString()}</span>
                     </div>
+                    {boostedRoe !== null && (
                     <div className="flex justify-between text-sm gap-2">
                       <span className="text-muted-foreground">Roe $/hr</span>
                       <span className="font-semibold text-amber-400">${boostedRoe.toLocaleString()}/hr</span>
                     </div>
+                    )}
                   </div>
                 </div>
               )}

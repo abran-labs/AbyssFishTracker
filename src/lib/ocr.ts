@@ -305,18 +305,22 @@ export async function extractFishData(
     if (fishName && weight) {
         const fishConfig = FISH_SPECIES.find(f => f.name === fishName);
         if (fishConfig) {
+            const maxSizeMult = Math.max(...MUTATIONS.map(m => m.sizeMultiplier));
+            const minSizeMult = Math.min(...MUTATIONS.map(m => m.sizeMultiplier));
+            const maxPossibleWeight = fishConfig.baseMaxWeight * maxSizeMult;
+            const minPossibleWeight = fishConfig.baseMinWeight * minSizeMult;
             // OCR sometimes misses the decimal point (e.g. 10.6 -> 106)
-            if (weight > fishConfig.maxWeight * 2) {
-                if (weight / 10 <= fishConfig.maxWeight && weight / 10 >= fishConfig.minWeight) {
+            if (weight > maxPossibleWeight * 2) {
+                if (weight / 10 <= maxPossibleWeight && weight / 10 >= minPossibleWeight) {
                     weight = weight / 10;
-                } else if (weight / 100 <= fishConfig.maxWeight && weight / 100 >= fishConfig.minWeight) {
+                } else if (weight / 100 <= maxPossibleWeight && weight / 100 >= minPossibleWeight) {
                     weight = weight / 100;
                 } else {
                     weight = null; // Unsalvageable
                 }
-            } else if (weight < fishConfig.minWeight / 2) {
+            } else if (weight < minPossibleWeight / 2) {
                 // Read 0.5 instead of 5.0
-                if (weight * 10 <= fishConfig.maxWeight && weight * 10 >= fishConfig.minWeight) {
+                if (weight * 10 <= maxPossibleWeight && weight * 10 >= minPossibleWeight) {
                     weight = weight * 10;
                 }
             }

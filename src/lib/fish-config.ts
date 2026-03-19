@@ -2,62 +2,72 @@ import { FishSpecies, Mutation, StarLevel } from "./types";
 
 export const FISH_SPECIES: FishSpecies[] = [
   // Common
-  { name: "Blue Tang", rarity: "Common", baseValue: 14, minWeight: 0.32, maxWeight: 1.68, areas: ["Forgotten Deep", "Ocean"] },
-  { name: "Clownfish", rarity: "Common", baseValue: 12, minWeight: 0.8, maxWeight: 3.36, areas: ["Forgotten Deep", "Ocean"] },
-  { name: "Salmon", rarity: "Common", baseValue: 9, minWeight: 3.2, maxWeight: 13.44, areas: ["Forgotten Deep", "Ocean"] },
-  { name: "Tang", rarity: "Common", baseValue: 12, minWeight: 0.32, maxWeight: 1.68, areas: ["Forgotten Deep"] },
-  { name: "Pompano", rarity: "Common", baseValue: 14, minWeight: 1.6, maxWeight: 13.44, areas: ["Ancient Sands"] },
-  { name: "Pacific Fanfish", rarity: "Common", baseValue: 20, minWeight: 4, maxWeight: 20.16, areas: ["Spirit Roots"] },
-  { name: "Discus", rarity: "Common", baseValue: 25, minWeight: 4.8, maxWeight: 23.52, areas: ["Sunken Wilds"] },
+  { name: "Blue Tang", rarity: "Common", baseValue: 14, baseMinWeight: 0.5, baseMaxWeight: 1, areas: ["Forgotten Deep", "Ocean"] },
+  { name: "Clownfish", rarity: "Common", baseValue: 12, baseMinWeight: 1, baseMaxWeight: 2, areas: ["Forgotten Deep", "Ocean"] },
+  { name: "Salmon", rarity: "Common", baseValue: 9, baseMinWeight: 4, baseMaxWeight: 8, areas: ["Forgotten Deep", "Ocean"] },
+  { name: "Tang", rarity: "Common", baseValue: 12, baseMinWeight: 0.5, baseMaxWeight: 1, areas: ["Forgotten Deep"] },
+  { name: "Pompano", rarity: "Common", baseValue: 14, baseMinWeight: 2, baseMaxWeight: 8, areas: ["Ancient Sands"] },
+  { name: "Pacific Fanfish", rarity: "Common", baseValue: 20, baseMinWeight: 5, baseMaxWeight: 12, areas: ["Spirit Roots"] },
+  { name: "Discus", rarity: "Common", baseValue: 25, baseMinWeight: 6, baseMaxWeight: 14, areas: ["Sunken Wilds"] },
   // Uncommon
-  { name: "Pufferfish", rarity: "Uncommon", baseValue: 13, minWeight: 1.6, maxWeight: 6.72, areas: ["Forgotten Deep", "Ocean"] },
-  { name: "Cod", rarity: "Uncommon", baseValue: 18, minWeight: 3.2, maxWeight: 20.16, areas: ["Ancient Sands"] },
-  { name: "Napoleon", rarity: "Uncommon", baseValue: 20, minWeight: 8, maxWeight: 42, areas: ["Spirit Roots"] },
-  { name: "Jellyfish", rarity: "Uncommon", baseValue: 35, minWeight: 3.2, maxWeight: 16.8, areas: ["Spirit Roots"] },
-  { name: "Tambaqui", rarity: "Uncommon", baseValue: 18, minWeight: 24, maxWeight: 75.6, areas: ["Sunken Wilds"] },
-  { name: "Trout", rarity: "Uncommon", baseValue: 24, minWeight: 8, maxWeight: 33.6, areas: ["Sunken Wilds"] },
-  { name: "Blackfin Tuna", rarity: "Uncommon", baseValue: 60, minWeight: 4.8, maxWeight: 26.88, areas: ["Ancient Sands"] },
+  { name: "Pufferfish", rarity: "Uncommon", baseValue: 13, baseMinWeight: 2, baseMaxWeight: 4, areas: ["Forgotten Deep", "Ocean"] },
+  { name: "Inflated Pufferfish", rarity: "Uncommon", baseValue: 26, baseMinWeight: 2, baseMaxWeight: 4, areas: ["Forgotten Deep", "Ocean"] },
+  { name: "Cod", rarity: "Uncommon", baseValue: 18, baseMinWeight: 4, baseMaxWeight: 12, areas: ["Ancient Sands"] },
+  { name: "Napoleon", rarity: "Uncommon", baseValue: 20, baseMinWeight: 10, baseMaxWeight: 25, areas: ["Spirit Roots"] },
+  { name: "Jellyfish", rarity: "Uncommon", baseValue: 35, baseMinWeight: 4, baseMaxWeight: 10, areas: ["Spirit Roots"] },
+  { name: "Tambaqui", rarity: "Uncommon", baseValue: 18, baseMinWeight: 30, baseMaxWeight: 45, areas: ["Sunken Wilds"] },
+  { name: "Trout", rarity: "Uncommon", baseValue: 24, baseMinWeight: 10, baseMaxWeight: 20, areas: ["Sunken Wilds"] },
+  { name: "Blackfin Tuna", rarity: "Uncommon", baseValue: 60, baseMinWeight: 6, baseMaxWeight: 16, areas: ["Ancient Sands"] },
   // Rare
-  { name: "Sea Horse", rarity: "Rare", baseValue: 250, minWeight: 0.4, maxWeight: 1.68, areas: ["Ocean"] },
-  { name: "Piranha", rarity: "Rare", baseValue: 44, minWeight: 4, maxWeight: 20.16, areas: ["Ocean", "Angler Cave", "Sunken Wilds"] },
-  { name: "Blobfish", rarity: "Rare", baseValue: 75, minWeight: 6.4, maxWeight: 33.6, areas: ["Ocean", "Angler Cave"] },
-  { name: "Lionfish", rarity: "Rare", baseValue: 20, minWeight: 1.6, maxWeight: 11.75, areas: ["Forgotten Deep"] },
-  { name: "Mahi Mahi", rarity: "Rare", baseValue: 8, minWeight: 6.4, maxWeight: 33.6, areas: ["Forgotten Deep"] },
-  { name: "Grouper", rarity: "Rare", baseValue: 28, minWeight: 4.8, maxWeight: 23.52, areas: ["Ancient Sands"] },
-  { name: "Scorpionfish", rarity: "Rare", baseValue: 60, minWeight: 3.2, maxWeight: 13.44, areas: ["Ancient Sands"] },
-  { name: "Sunfish", rarity: "Rare", baseValue: 17, minWeight: 16, maxWeight: 67.2, areas: ["Spirit Roots"] },
-  { name: "Narwhal", rarity: "Rare", baseValue: 18, minWeight: 24, maxWeight: 84, areas: ["Spirit Roots"] },
-  { name: "Anglerfish", rarity: "Rare", baseValue: 35, minWeight: 24, maxWeight: 100.8, areas: ["Angler Cave"] },
-  { name: "Sea Turtle", rarity: "Rare", baseValue: 20, minWeight: 48, maxWeight: 142.8, areas: ["Sunken Wilds"] },
+  { name: "Sea Horse", rarity: "Rare", baseValue: 250, baseMinWeight: 0.5, baseMaxWeight: 1, areas: ["Ocean"] },
+  { name: "Piranha", rarity: "Rare", baseValue: 44, baseMinWeight: 5, baseMaxWeight: 12, areas: ["Ocean", "Angler Cave", "Sunken Wilds"] },
+  { name: "Blobfish", rarity: "Rare", baseValue: 75, baseMinWeight: 8, baseMaxWeight: 20, areas: ["Ocean", "Angler Cave"] },
+  { name: "Lionfish", rarity: "Rare", baseValue: 20, baseMinWeight: 2, baseMaxWeight: 6, areas: ["Forgotten Deep"] },
+  { name: "Mahi Mahi", rarity: "Rare", baseValue: 8, baseMinWeight: 8, baseMaxWeight: 20, areas: ["Forgotten Deep"] },
+  { name: "Grouper", rarity: "Rare", baseValue: 28, baseMinWeight: 6, baseMaxWeight: 14, areas: ["Ancient Sands"] },
+  { name: "Scorpionfish", rarity: "Rare", baseValue: 60, baseMinWeight: 4, baseMaxWeight: 8, areas: ["Ancient Sands"] },
+  { name: "Sunfish", rarity: "Rare", baseValue: 17, baseMinWeight: 20, baseMaxWeight: 40, areas: ["Spirit Roots"] },
+  { name: "Narwhal", rarity: "Rare", baseValue: 18, baseMinWeight: 30, baseMaxWeight: 50, areas: ["Spirit Roots"] },
+  { name: "Anglerfish", rarity: "Rare", baseValue: 35, baseMinWeight: 30, baseMaxWeight: 60, areas: ["Angler Cave"] },
+  { name: "Sea Turtle", rarity: "Rare", baseValue: 20, baseMinWeight: 60, baseMaxWeight: 85, areas: ["Sunken Wilds"] },
   // Epic
-  { name: "Barracuda", rarity: "Epic", baseValue: 20, minWeight: 4.8, maxWeight: 20.16, areas: ["Forgotten Deep"] },
-  { name: "Cavefish", rarity: "Epic", baseValue: 22, minWeight: 24, maxWeight: 134.4, areas: ["Ancient Sands"] },
-  { name: "Shark", rarity: "Epic", baseValue: 40, minWeight: 16, maxWeight: 117.6, areas: ["Ocean", "Ancient Sands"] },
-  { name: "Sailfish", rarity: "Epic", baseValue: 40, minWeight: 24, maxWeight: 100.8, areas: ["Ocean", "Spirit Roots"] },
-  { name: "Hammer Shark", rarity: "Epic", baseValue: 48, minWeight: 32, maxWeight: 134.4, areas: ["Spirit Roots"] },
-  { name: "Jaguar Shark", rarity: "Epic", baseValue: 50, minWeight: 56, maxWeight: 184.8, areas: ["Sunken Wilds"] },
-  { name: "Toucan Fish", rarity: "Epic", baseValue: 90, minWeight: 20, maxWeight: 67.2, areas: ["Sunken Wilds"] },
+  { name: "Barracuda", rarity: "Epic", baseValue: 20, baseMinWeight: 6, baseMaxWeight: 12, areas: ["Forgotten Deep"] },
+  { name: "Cavefish", rarity: "Epic", baseValue: 22, baseMinWeight: 30, baseMaxWeight: 80, areas: ["Ancient Sands"] },
+  { name: "Shark", rarity: "Epic", baseValue: 40, baseMinWeight: 20, baseMaxWeight: 70, areas: ["Ocean", "Ancient Sands"] },
+  { name: "Sailfish", rarity: "Epic", baseValue: 40, baseMinWeight: 30, baseMaxWeight: 60, areas: ["Ocean", "Spirit Roots"] },
+  { name: "Hammer Shark", rarity: "Epic", baseValue: 48, baseMinWeight: 40, baseMaxWeight: 80, areas: ["Spirit Roots"] },
+  { name: "Jaguar Shark", rarity: "Epic", baseValue: 50, baseMinWeight: 70, baseMaxWeight: 110, areas: ["Sunken Wilds"] },
+  { name: "Toucan Fish", rarity: "Epic", baseValue: 90, baseMinWeight: 25, baseMaxWeight: 40, areas: ["Sunken Wilds"] },
   // Legendary
-  { name: "Bluefin Tuna", rarity: "Legendary", baseValue: 36, minWeight: 120, maxWeight: 336, areas: ["Ocean"] },
-  { name: "Bigmouthfish", rarity: "Legendary", baseValue: 76, minWeight: 16, maxWeight: 84, areas: ["Ancient Sands"] },
-  { name: "Ancient Shark", rarity: "Legendary", baseValue: 50, minWeight: 72, maxWeight: 218.4, areas: ["Ancient Sands"] },
-  { name: "Eyefish", rarity: "Legendary", baseValue: 160, minWeight: 16, maxWeight: 75.6, areas: ["Spirit Roots"] },
-  { name: "Sacabambaspis", rarity: "Legendary", baseValue: 150, minWeight: 17.6, maxWeight: 70.56, areas: ["Sunken Wilds"] },
+  { name: "Bluefin Tuna", rarity: "Legendary", baseValue: 36, baseMinWeight: 150, baseMaxWeight: 200, areas: ["Ocean"] },
+  { name: "Bigmouthfish", rarity: "Legendary", baseValue: 76, baseMinWeight: 20, baseMaxWeight: 50, areas: ["Ancient Sands"] },
+  { name: "Ancient Shark", rarity: "Legendary", baseValue: 50, baseMinWeight: 90, baseMaxWeight: 130, areas: ["Ancient Sands"] },
+  { name: "Eyefish", rarity: "Legendary", baseValue: 160, baseMinWeight: 20, baseMaxWeight: 45, areas: ["Spirit Roots"] },
+  { name: "Sacabambaspis", rarity: "Legendary", baseValue: 150, baseMinWeight: 22, baseMaxWeight: 42, areas: ["Sunken Wilds"] },
   // Gloomspore Valley
-  { name: "Boxfish", rarity: "Common", baseValue: 32, minWeight: 6.4, maxWeight: 30.24, areas: ["Gloomspore Valley"] },
-  { name: "Stingray", rarity: "Common", baseValue: 35, minWeight: 9.6, maxWeight: 40.32, areas: ["Gloomspore Valley"] },
-  { name: "Squid", rarity: "Uncommon", baseValue: 65, minWeight: 8, maxWeight: 26.88, areas: ["Gloomspore Valley"] },
-  { name: "Atlantic Octopus", rarity: "Uncommon", baseValue: 60, minWeight: 24, maxWeight: 75.6, areas: ["Gloomspore Valley"] },
-  { name: "Catfish", rarity: "Uncommon", baseValue: 32, minWeight: 24, maxWeight: 75.6, areas: ["Gloomspore Valley"] },
-  { name: "Largemouth Bass", rarity: "Rare", baseValue: 65, minWeight: 20, maxWeight: 58.8, areas: ["Gloomspore Valley"] },
-  { name: "Sockeye Salmon", rarity: "Rare", baseValue: 100, minWeight: 16, maxWeight: 50.4, areas: ["Gloomspore Valley"] },
-  { name: "Surubim", rarity: "Rare", baseValue: 68, minWeight: 32, maxWeight: 92.4, areas: ["Gloomspore Valley"] },
-  { name: "Manta Ray", rarity: "Epic", baseValue: 48, minWeight: 56, maxWeight: 168, areas: ["Gloomspore Valley"] },
-  { name: "Basking Shark", rarity: "Epic", baseValue: 85, minWeight: 96, maxWeight: 235.2, areas: ["Gloomspore Valley"] },
-  { name: "Phantom Jelly", rarity: "Epic", baseValue: 145, minWeight: 28, maxWeight: 92.4, areas: ["Gloomspore Valley"] },
-  { name: "Alien", rarity: "Epic", baseValue: 140, minWeight: 40, maxWeight: 117.6, areas: ["Gloomspore Valley"] },
-  { name: "Thresher Shark", rarity: "Epic", baseValue: 82, minWeight: 48, maxWeight: 151.2, areas: ["Gloomspore Valley"] },
-  { name: "Angel", rarity: "Mythical", baseValue: 300, minWeight: 64, maxWeight: 168, areas: ["Gloomspore Valley"] },
+  { name: "Boxfish", rarity: "Common", baseValue: 32, baseMinWeight: 8, baseMaxWeight: 18, areas: ["Gloomspore Valley"] },
+  { name: "Stingray", rarity: "Common", baseValue: 35, baseMinWeight: 12, baseMaxWeight: 24, areas: ["Gloomspore Valley"] },
+  { name: "Squid", rarity: "Uncommon", baseValue: 65, baseMinWeight: 10, baseMaxWeight: 16, areas: ["Gloomspore Valley"] },
+  { name: "Atlantic Octopus", rarity: "Uncommon", baseValue: 60, baseMinWeight: 30, baseMaxWeight: 45, areas: ["Gloomspore Valley"] },
+  { name: "Catfish", rarity: "Uncommon", baseValue: 32, baseMinWeight: 30, baseMaxWeight: 45, areas: ["Gloomspore Valley"] },
+  { name: "Largemouth Bass", rarity: "Rare", baseValue: 65, baseMinWeight: 25, baseMaxWeight: 35, areas: ["Gloomspore Valley"] },
+  { name: "Sockeye Salmon", rarity: "Rare", baseValue: 100, baseMinWeight: 20, baseMaxWeight: 30, areas: ["Gloomspore Valley"] },
+  { name: "Surubim", rarity: "Rare", baseValue: 68, baseMinWeight: 40, baseMaxWeight: 55, areas: ["Gloomspore Valley"] },
+  { name: "Manta Ray", rarity: "Epic", baseValue: 48, baseMinWeight: 70, baseMaxWeight: 100, areas: ["Gloomspore Valley"] },
+  { name: "Basking Shark", rarity: "Epic", baseValue: 85, baseMinWeight: 120, baseMaxWeight: 140, areas: ["Gloomspore Valley"] },
+  { name: "Phantom Jelly", rarity: "Epic", baseValue: 145, baseMinWeight: 35, baseMaxWeight: 55, areas: ["Gloomspore Valley"] },
+  { name: "Alien", rarity: "Epic", baseValue: 140, baseMinWeight: 50, baseMaxWeight: 70, areas: ["Gloomspore Valley"] },
+  { name: "Thresher Shark", rarity: "Epic", baseValue: 82, baseMinWeight: 60, baseMaxWeight: 90, areas: ["Gloomspore Valley"] },
+  { name: "Angel", rarity: "Mythical", baseValue: 300, baseMinWeight: 80, baseMaxWeight: 100, areas: ["Gloomspore Valley"] },
+  // Mini-boss fish (not pondable, no roe) — drop type (Meat/Head) handled in UI
+  // baseMinWeight/baseMaxWeight are full fish weights; divide by 3 for per-piece weight
+  { name: "Whale", rarity: "Legendary", baseValue: 40, baseMinWeight: 120, baseMaxWeight: 220, areas: ["Spirit Roots"], pondable: false },
+  { name: "Dragonfish", rarity: "Mythical", baseValue: 70, baseMinWeight: 150, baseMaxWeight: 250, areas: ["Spirit Roots"], pondable: false },
+  { name: "King Anglerfish", rarity: "Mythical", baseValue: 45, baseMinWeight: 150, baseMaxWeight: 250, areas: ["Angler Cave"], pondable: false },
+  { name: "Mosasaurus", rarity: "Legendary", baseValue: 50, baseMinWeight: 150, baseMaxWeight: 240, areas: ["Sunken Wilds"], pondable: false },
+  { name: "Pelican Eel", rarity: "Mythical", baseValue: 75, baseMinWeight: 175, baseMaxWeight: 285, areas: ["Sunken Wilds"], pondable: false },
+  { name: "Orca", rarity: "Legendary", baseValue: 63, baseMinWeight: 200, baseMaxWeight: 280, areas: ["Gloomspore Valley"], pondable: false },
+  { name: "Sea Angel", rarity: "Legendary", baseValue: 75, baseMinWeight: 260, baseMaxWeight: 320, areas: ["Gloomspore Valley"], pondable: false },
 ];
 
 export const MUTATIONS: Mutation[] = [
@@ -223,7 +233,8 @@ export const MUTATION_COLORS: Record<string, string> = {
 export const STAR_COLOR = "#FDC85D";
 
 export function getRarityColor(fishName: string): string | undefined {
-  const fish = FISH_SPECIES.find((f) => f.name === fishName);
+  const baseName = fishName.replace(/ \((Meat|Head)\)$/, "");
+  const fish = FISH_SPECIES.find((f) => f.name === baseName);
   return fish ? RARITY_COLORS[fish.rarity] : undefined;
 }
 
@@ -291,14 +302,15 @@ export function getOptimizationColor(opt: number): string {
 }
 
 export function getWeightColor(weight: number, fishName: string, mutation?: string): string {
-  const fish = FISH_SPECIES.find((f) => f.name === fishName);
+  const baseName = fishName.replace(/ \((Meat|Head)\)$/, "");
+  const fish = FISH_SPECIES.find((f) => f.name === baseName);
   if (!fish) return WEIGHT_COLORS.normal;
-  const range = fish.maxWeight - fish.minWeight;
+  const range = fish.baseMaxWeight - fish.baseMinWeight;
   if (range === 0) return WEIGHT_COLORS.normal;
   const sizeMult = mutation
     ? (MUTATIONS.find((m) => m.name === mutation)?.sizeMultiplier ?? 1)
     : 1;
-  const v12 = Math.min(1.2, Math.max(0, (weight / sizeMult - fish.minWeight) / range));
+  const v12 = Math.min(1.2, Math.max(0, (weight / sizeMult - fish.baseMinWeight) / range));
   if (v12 <= 0.05) {
     return WEIGHT_COLORS.tiny;
   } else if (v12 <= 0.3) {

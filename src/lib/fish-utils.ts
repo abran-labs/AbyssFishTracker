@@ -17,13 +17,12 @@ export function calculateOptimization(
   actualValue: number,
   fish: FishSpecies
 ): number {
-  const highestMutationMultiplier = Math.max(
-    ...MUTATIONS.map((m) => m.multiplier)
-  );
+  const highestValueMultiplier = Math.max(...MUTATIONS.map((m) => m.multiplier));
+  const maxSizeMultiplier = Math.max(...MUTATIONS.map((m) => m.sizeMultiplier));
   const threeStarMultiplier =
     STAR_LEVELS.find((s) => s.value === 3)?.multiplier ?? 1.0;
   const theoreticalMax =
-    fish.maxWeight * fish.baseValue * threeStarMultiplier * highestMutationMultiplier;
+    fish.baseMaxWeight * maxSizeMultiplier * fish.baseValue * threeStarMultiplier * highestValueMultiplier;
   if (theoreticalMax === 0) return 0;
   return (actualValue / theoreticalMax) * 100;
 }
