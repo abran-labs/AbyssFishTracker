@@ -183,6 +183,8 @@ export default function Home() {
               <CalculatorTab />
               <p className="mt-6 text-sm text-muted-foreground text-center italic">
                 🍄 The calculator has been updated to include the new <span style={{ color: "rgb(189, 135, 204)" }}>Gloomspore Valley</span>!
+                <br />
+                Mini Bosses have been added to the calculator!
               </p>
             </TabsContent>
 
