@@ -123,6 +123,9 @@ export const CYCLE_TIMES: Record<string, number> = {
   Mythical: 900,
 };
 
+// Available pond sizes
+export const POND_SIZES = [6, 8, 10, 12, 14, 16, 18];
+
 // Roe Storage capacity per upgrade level (kg)
 export const ROE_STORAGE_LEVELS = [
   { level: 0, capacity: 500 },

@@ -17,6 +17,7 @@ import {
   DECORATION_LEVELS,
   RACES,
   ARTIFACTS,
+  POND_SIZES,
 } from "@/lib/fish-config";
 import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
 import { useSettings } from "@/components/settings-context";
@@ -41,7 +42,6 @@ import { Button } from "@/components/ui/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import { useToast } from "@/components/ui/toast-context";
 
-const POND_SIZES = [6, 8, 10, 12, 14, 16, 18]; // This array is no longer used directly for the Select options, but kept for reference if needed elsewhere.
 
 interface SwapEntry {
   remove?: FishEntry;
@@ -282,7 +282,7 @@ export function FishPondTab({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[6, 8, 10, 12, 14, 16, 18].map((num) => (
+                {POND_SIZES.map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num} Fish
                   </SelectItem>

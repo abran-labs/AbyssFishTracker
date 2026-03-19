@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useSettings } from "@/components/settings-context";
-import { type FishEntry } from "@/lib/types";
-import { FISH_SPECIES, FISH_FEED, ROE_STORAGE_LEVELS, DECORATION_LEVELS, RACES, ARTIFACTS, CYCLE_TIMES } from "@/lib/fish-config";
+import { type FishEntry, type FishArea } from "@/lib/types";
+import { FISH_SPECIES, FISH_FEED, ROE_STORAGE_LEVELS, DECORATION_LEVELS, RACES, ARTIFACTS, CYCLE_TIMES, MUTATIONS, POND_SIZES } from "@/lib/fish-config";
 import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -17,6 +17,64 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { IconBell, IconBellOff } from "@tabler/icons-react";
+
+// Computed once at module load from static config — no user settings involved
+const THEORETICAL_MAX_ROE_PER_HOUR = (() => {
+    // Best race: highest cash bonus
+    const bestRaceCashBonus = Math.max(...RACES.map((r) => r.cashBonus));
+
+    // Best 3 artifact slots: sort by cashBonus desc, unique artifacts only once
+    const sortedArtifacts = [...ARTIFACTS].sort((a, b) => b.cashBonus - a.cashBonus);
+    const usedUnique = new Set<string>();
+    let bestArtifactBonus = 0;
+    let slots = 0;
+    for (const art of sortedArtifacts) {
+        if (slots >= 3) break;
+        if (art.unique && usedUnique.has(art.name)) continue;
+        if (art.unique) usedUnique.add(art.name);
+        bestArtifactBonus += art.cashBonus;
+        slots++;
+    }
+    const bestCashMultiplier = (1 + bestArtifactBonus) * (1 + bestRaceCashBonus);
+
+    // Best feed speed bonus
+    const bestFeedSpeedBonus = Math.max(...FISH_FEED.map((f) => f.speedBonus));
+    // Best decoration speed bonus
+    const bestDecoSpeedBonus = Math.max(...DECORATION_LEVELS.map((d) => d.speedBonus));
+    const bestSpeedMultiplier = 1 + bestDecoSpeedBonus + bestFeedSpeedBonus;
+    // Online = 1.0 multiplier (no offline penalty)
+
+    // Find the newest area (last area to first appear in FISH_SPECIES order)
+    const seenAreas = new Set<string>();
+    let newestArea = "" as FishArea;
+    for (const fish of FISH_SPECIES) {
+        for (const area of fish.areas) {
+            if (!seenAreas.has(area)) {
+                seenAreas.add(area);
+                newestArea = area;
+            }
+        }
+    }
+
+    // Only check pondable fish from the newest area — best fish are always there
+    const pondableFish = FISH_SPECIES.filter((f) => f.pondable !== false && f.areas.includes(newestArea));
+    let bestBaseRoe = 0;
+    for (const fish of pondableFish) {
+        const availableMutations = MUTATIONS.filter((m) => !m.area || fish.areas.includes(m.area));
+        for (const mutation of availableMutations) {
+            const hasMutation = mutation.name !== "None";
+            // Lucky catch = baseMaxWeight × mutation sizeMultiplier, 3 stars = 1.0 multiplier
+            const maxWeight = fish.baseMaxWeight * mutation.sizeMultiplier;
+            const fishValue = Math.round(maxWeight * fish.baseValue * 1.0 * mutation.multiplier);
+            const baseRoe = calculateBaseRoePerHour(fishValue, hasMutation, fish.rarity);
+            if (baseRoe > bestBaseRoe) bestBaseRoe = baseRoe;
+        }
+    }
+
+    // Max pond size, all identical best fish, online, best boosts
+    const maxPondSize = Math.max(...POND_SIZES);
+    return bestBaseRoe * bestCashMultiplier * bestSpeedMultiplier * 1.0 * maxPondSize;
+})();
 
 interface PondPredictionProps {
     pondFish: FishEntry[];
@@ -181,6 +239,26 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
         return total;
     }, [pondFish, settings.decorationLevel, isOffline]);
 
+
+    // User's theoretical max: their actual pond fish + current race/artifacts/decoration/size,
+    // but with the best possible feed and online mode
+    const bestFeedSpeedBonus = Math.max(...FISH_FEED.map((f) => f.speedBonus));
+    const userTheoreticalMaxRoe = React.useMemo(() => {
+        let total = 0;
+        for (const entry of pondFish) {
+            const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
+            if (!fish) continue;
+            const hasMutation = entry.mutation !== "None";
+            const baseRoe = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
+            total += calculateBoostedRoePerHour(baseRoe, globalSettings, settings.decorationLevel, bestFeedSpeedBonus, false);
+        }
+        return total;
+    }, [pondFish, globalSettings, settings.decorationLevel, bestFeedSpeedBonus]);
+
+    const progressPercent = THEORETICAL_MAX_ROE_PER_HOUR > 0
+        ? (userTheoreticalMaxRoe / THEORETICAL_MAX_ROE_PER_HOUR) * 100
+        : 0;
+
     const hoursUntilFullWithFeed = React.useMemo(() => {
         if (feedDurationHours === Infinity || roeKgPerHour <= 0) return hoursUntilFull;
         const kgDuringFeed = roeKgPerHour * feedDurationHours;
@@ -271,6 +349,7 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
     if (pondFish.length === 0) return null;
 
     return (
+        <>
         <Card>
             <CardHeader className="pb-3">
                 <CardTitle className="text-base">Pond Calculator</CardTitle>
@@ -396,5 +475,14 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
                 </div>
             </CardContent>
         </Card>
+        <p className="text-xs text-center text-muted-foreground">
+            The current theoretical max Roe $/hr is{" "}
+            <span className="font-semibold text-foreground">${Math.round(THEORETICAL_MAX_ROE_PER_HOUR).toLocaleString()}/hr</span>
+            <br />
+            You are{" "}
+            <span className="font-semibold text-foreground">{progressPercent < 1 ? progressPercent.toFixed(2) : progressPercent.toFixed(1)}%</span>
+            {" "}of the way there.
+        </p>
+        </>
     );
 }
