@@ -129,6 +129,15 @@ export function FishLogTab({
   const [sortKey, setSortKey] = React.useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = React.useState<SortDir>("desc");
   const { addToast, removeToast } = useToast();
+
+  React.useEffect(() => {
+    if (modalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [modalOpen]);
   const { race, artifact1, artifact2, artifact3, decorationLevel, roeStorageLevel } = useSettings();
 
   const { cashBonus, speedBonus, boostMultiplier } = React.useMemo(() => {
@@ -412,7 +421,7 @@ export function FishLogTab({
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-lg border bg-card p-6 shadow-lg mx-4">
+          <div className="w-full max-w-md rounded-lg border bg-card p-6 shadow-lg mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">
                 {editingEntry ? "Edit Entry" : "Add Entry"}
