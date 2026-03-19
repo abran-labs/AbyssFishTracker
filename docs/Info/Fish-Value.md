@@ -144,14 +144,17 @@ Offline production runs at 50% rate.
 | Abyssal     | 8.5x       | 1.4x      | Any               |
 
 
-## Lucky Catch
+## Lucky Spawn
 
-There is a **3% chance** on any catch to trigger a lucky catch, which applies a **1.2x weight multiplier** to the fish. This is separate and stacks on top of the mutation size multiplier.
+There is a **3% chance** during any fish spawn to trigger a **Lucky Spawn**, which calculates the fish's weight using an extended range. Instead of picking a weight between the fish's `baseMinWeight` and `baseMaxWeight`, it picks a value between `baseMaxWeight` and `baseMaxWeight * 1.2`. 
+This extra weight is added to the fish before any mutation multipliers are applied.
 
 The effective maximum possible weight for a fish is therefore:
 ```
-maxWeight = baseMaxWeight * maxSizeMultiplier * 1.2
+maxWeight = baseMaxWeight * 1.2 * mutationSizeMultiplier
 ```
+
+> *Note: Since the game calculates whether a fish is tiny, small, normal, big, or giant by normalizing the mutation weight multiplier to only take the base weight into account, any fish that triggers this 3% Lucky Spawn is automatically categorized by the game as a **Giant**, *meaning you can technically have a **Big fish that is heavier than a **giant** fish if the mutations are different.*
 
 ## Cycle Times
 
