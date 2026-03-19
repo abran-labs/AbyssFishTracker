@@ -185,6 +185,8 @@ export default function Home() {
                 🍄 The calculator has been updated to include the new <span style={{ color: "rgb(189, 135, 204)" }}>Gloomspore Valley</span>!
                 <br />
                 Mini Bosses have been added to the calculator!
+                <br />
+                🎉 Thanks so much for 10k+ calculations!
               </p>
             </TabsContent>
 
