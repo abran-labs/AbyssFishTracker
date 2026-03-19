@@ -154,7 +154,7 @@ The effective maximum possible weight for a fish is therefore:
 maxWeight = baseMaxWeight * 1.2 * mutationSizeMultiplier
 ```
 
-> *Note: Since the game calculates whether a fish is tiny, small, normal, big, or giant by normalizing the mutation weight multiplier to only take the base weight into account, any fish that triggers this 3% Lucky Spawn is automatically categorized by the game as a **Giant**, *meaning you can technically have a **Big fish that is heavier than a **giant** fish if the mutations are different.*
+> *Note: Since the game calculates whether a fish is tiny, small, normal, big, or giant by normalizing the mutation weight multiplier to only take the base weight into account, any fish that triggers this 3% Lucky Spawn is automatically categorized by the game as a **Giant**, *meaning you can technically have a **Big** fish that is heavier than a **giant** fish if the mutations are different.*
 
 ## Cycle Times
 
