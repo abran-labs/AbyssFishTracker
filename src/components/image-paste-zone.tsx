@@ -139,7 +139,7 @@ export function ImagePasteZone({ onResult }: ImagePasteZoneProps) {
                         <div className="flex flex-col items-center mt-2 text-center pointer-events-none">
                             <span className="text-sm text-green-400 font-medium">✓ Auto-filled from image</span>
                             <span className="text-[11px] text-muted-foreground mt-1 max-w-[220px]">
-                                OCR may contain errors.<br />Please verify the copied values.
+                                Autofill may contain errors.<br />Please double check the values.
                             </span>
                         </div>
                     </div>
