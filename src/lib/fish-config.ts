@@ -62,7 +62,7 @@ export const FISH_SPECIES: FishSpecies[] = [
 
 export const MUTATIONS: Mutation[] = [
   { name: "None", multiplier: 1.0, sizeMultiplier: 1.0 },
-  { name: "Poop", multiplier: 0.33, sizeMultiplier: 1.333 },
+  { name: "Poop", multiplier: 0.333, sizeMultiplier: 1.333 },
   { name: "Rock", multiplier: 1.0, sizeMultiplier: 1.2, area: "Forgotten Deep" },
   { name: "Moss", multiplier: 1.1, sizeMultiplier: 1.0, area: "Forgotten Deep" },
   { name: "Coral", multiplier: 1.1, sizeMultiplier: 0.8 },
@@ -71,7 +71,7 @@ export const MUTATIONS: Mutation[] = [
   { name: "Albino", multiplier: 1.3, sizeMultiplier: 1.0 },
   { name: "Transparent", multiplier: 1.35, sizeMultiplier: 1.0 },
   { name: "Cactus", multiplier: 1.45, sizeMultiplier: 1.3, area: "Ancient Sands" },
-  { name: "Banana", multiplier: 1.5, sizeMultiplier: 1.0, area: "Sunken Wilds" },
+  { name: "Banana", multiplier: 1.5, sizeMultiplier: 1.1, area: "Sunken Wilds" },
   { name: "Spirit", multiplier: 1.7, sizeMultiplier: 1.2, area: "Spirit Roots" },
   { name: "Fossil", multiplier: 1.75, sizeMultiplier: 0.9, area: "Ancient Sands" },
   { name: "Golden", multiplier: 2.0, sizeMultiplier: 1.2 },
@@ -81,8 +81,8 @@ export const MUTATIONS: Mutation[] = [
   { name: "Liquid", multiplier: 2.5, sizeMultiplier: 1.3 },
   { name: "Grounded", multiplier: 2.8, sizeMultiplier: 1.2, area: "Sunken Wilds" },
   { name: "Neon", multiplier: 2.8, sizeMultiplier: 1.2 },
-  { name: "Ultraviolet", multiplier: 3.6, sizeMultiplier: 1.8 },
-  { name: "Rooted", multiplier: 3.6, sizeMultiplier: 1.5, area: "Spirit Roots" },
+  { name: "Ultraviolet", multiplier: 3.6, sizeMultiplier: 1.3 },
+  { name: "Rooted", multiplier: 3.6, sizeMultiplier: 1.2, area: "Spirit Roots" },
   { name: "Toxic", multiplier: 3.75, sizeMultiplier: 1.2 },
   { name: "Jade", multiplier: 4, sizeMultiplier: 1.0, area: "Sunken Wilds" },
   { name: "Spore", multiplier: 2.0, sizeMultiplier: 1.2, area: "Gloomspore Valley" },
@@ -93,7 +93,7 @@ export const MUTATIONS: Mutation[] = [
   { name: "Lonely", multiplier: 2.0, sizeMultiplier: 1.0 },
   { name: "Shadow", multiplier: 6.66, sizeMultiplier: 1.11 },
   { name: "Angelic", multiplier: 7.77, sizeMultiplier: 1.4 },
-  { name: "Abyssal", multiplier: 8.5, sizeMultiplier: 1.5 },
+  { name: "Abyssal", multiplier: 8.5, sizeMultiplier: 1.4 },
 ];
 
 export const STAR_LEVELS: StarLevel[] = [

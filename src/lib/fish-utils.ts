@@ -8,7 +8,7 @@ export function calculateValue(
   mutationMultiplier: number,
   sizeMultiplier: number = 1
 ): number {
-  const baseWeight = Math.round((weight / sizeMultiplier) * 10) / 10;
+  const baseWeight = weight / sizeMultiplier;
   const correctedWeight = baseWeight * sizeMultiplier;
   return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
 }

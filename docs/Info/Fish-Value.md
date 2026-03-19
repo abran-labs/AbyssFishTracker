@@ -3,7 +3,7 @@
 ## Fish Price Formula
 
 ```
-baseWeight = round(displayedWeight / sizeMultiplier, 1)
+baseWeight = displayedWeight / sizeMultiplier
 correctedWeight = baseWeight * sizeMultiplier
 Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultiplier)
 BoostedValue = round(Value * bonusMultiplier)
@@ -100,7 +100,7 @@ Offline production runs at 50% rate.
 
 | Mutation    | Price Mult | Size Mult | Area              |
 | ----------- | ---------- | --------- | ----------------- |
-| Poop        | 0.33x      | 1.333x    | Any               |
+| Poop        | 0.333x     | 1.333x    | Any               |
 | Rock        | 1x         | 1.2x      | Forgotten Deep    |
 | Moss        | 1.1x       | 1x        | Forgotten Deep    |
 | Coral       | 1.1x       | 0.8x      | Any               |
@@ -109,7 +109,7 @@ Offline production runs at 50% rate.
 | Albino      | 1.3x       | 1x        | Any               |
 | Transparent | 1.35x      | 1x        | Any               |
 | Cactus      | 1.45x      | 1.3x      | Ancient Sands     |
-| Banana      | 1.5x       | 1x        | Sunken Wilds      |
+| Banana      | 1.5x       | 1.1x        | Sunken Wilds      |
 | Spirit      | 1.7x       | 1.2x      | Spirit Roots      |
 | Fossil      | 1.75x      | 0.9x      | Ancient Sands     |
 | Golden      | 2x         | 1.2x      | Any               |
@@ -119,8 +119,8 @@ Offline production runs at 50% rate.
 | Liquid      | 2.5x       | 1.3x      | Any               |
 | Grounded    | 2.8x       | 1.2x      | Sunken Wilds      |
 | Neon        | 2.8x       | 1.2x      | Any               |
-| Ultraviolet | 3.6x       | 1.8x      | Any               |
-| Rooted      | 3.6x       | 1.5x      | Spirit Roots      |
+| Ultraviolet | 3.6x       | 1.3x      | Any               |
+| Rooted      | 3.6x       | 1.2x      | Spirit Roots      |
 | Toxic       | 3.75x      | 1.2x      | Any               |
 | Jade        | 4x         | 1x        | Sunken Wilds      |
 | Spore       | 2x         | 1.2x      | Gloomspore Valley |
@@ -131,7 +131,7 @@ Offline production runs at 50% rate.
 | Lonely      | 2x         | 1x        | Any               |
 | Shadow      | 6.66x      | 1.11x     | Any               |
 | Angelic     | 7.77x      | 1.4x      | Any               |
-| Abyssal     | 8.5x       | 1.5x      | Any               |
+| Abyssal     | 8.5x       | 1.4x      | Any               |
 
 
 ## Cycle Times
