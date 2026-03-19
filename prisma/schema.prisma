@@ -26,8 +26,13 @@ model UserSettings {
   artifact3       String  @default("None")
   roeStorageLevel Int     @default(0)
   decorationLevel Int     @default(0)
-  pondSortNoticeDismissed Boolean  @default(false)
-  ignoredSwapFishIds      String[] @default([])
+  pondSortNoticeDismissed Boolean   @default(false)
+  ignoredSwapFishIds      String[]  @default([])
+  pondIsOffline           Boolean   @default(true)
+  pondFeedType            String    @default("None")
+  pondFeedBags            Int       @default(1)
+  pondReminderFeedAt      DateTime?
+  pondReminderStorageAt   DateTime?
 
   userId String @unique
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

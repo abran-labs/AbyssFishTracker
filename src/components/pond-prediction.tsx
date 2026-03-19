@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { IconBell } from "@tabler/icons-react";
+import { IconBell, IconBellOff } from "@tabler/icons-react";
 
 interface PondPredictionProps {
     pondFish: FishEntry[];
@@ -31,18 +31,86 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
     const [notifStorageScheduled, setNotifStorageScheduled] = React.useState(false);
     const notifFeedTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
     const notifStorageTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const initialized = React.useRef(false);
 
-    const cancelNotifs = () => {
-        if (notifFeedTimer.current) { clearTimeout(notifFeedTimer.current); notifFeedTimer.current = null; }
-        if (notifStorageTimer.current) { clearTimeout(notifStorageTimer.current); notifStorageTimer.current = null; }
-        setNotifFeedScheduled(false);
-        setNotifStorageScheduled(false);
+    // Initialize from DB settings once loaded, restore any persisted reminders
+    React.useEffect(() => {
+        if (!settings.loaded || initialized.current) return;
+        initialized.current = true;
+
+        setFeedType(settings.pondFeedType);
+        setFeedBags(String(settings.pondFeedBags));
+        setIsOffline(settings.pondIsOffline);
+
+        const now = Date.now();
+
+        if (settings.pondReminderFeedAt) {
+            const fireAt = new Date(settings.pondReminderFeedAt).getTime();
+            if (fireAt > now) {
+                notifFeedTimer.current = setTimeout(() => {
+                    new Notification("Abyss Fish Tracker", { body: "Your fish feed has expired!" });
+                    notifFeedTimer.current = null;
+                    setNotifFeedScheduled(false);
+                    settings.updateSettings({ pondReminderFeedAt: null });
+                }, fireAt - now);
+                setNotifFeedScheduled(true);
+            } else {
+                settings.updateSettings({ pondReminderFeedAt: null });
+            }
+        }
+
+        if (settings.pondReminderStorageAt) {
+            const fireAt = new Date(settings.pondReminderStorageAt).getTime();
+            if (fireAt > now) {
+                notifStorageTimer.current = setTimeout(() => {
+                    new Notification("Abyss Fish Tracker", { body: "Your roe storage is full!" });
+                    notifStorageTimer.current = null;
+                    setNotifStorageScheduled(false);
+                    settings.updateSettings({ pondReminderStorageAt: null });
+                }, fireAt - now);
+                setNotifStorageScheduled(true);
+            } else {
+                settings.updateSettings({ pondReminderStorageAt: null });
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [settings.loaded]);
+
+    const cancelNotifs = (opts?: { feed?: boolean; storage?: boolean }) => {
+        const cancelFeed = opts?.feed ?? true;
+        const cancelStorage = opts?.storage ?? true;
+        if (cancelFeed && notifFeedTimer.current) {
+            clearTimeout(notifFeedTimer.current);
+            notifFeedTimer.current = null;
+            setNotifFeedScheduled(false);
+            settings.updateSettings({ pondReminderFeedAt: null });
+        }
+        if (cancelStorage && notifStorageTimer.current) {
+            clearTimeout(notifStorageTimer.current);
+            notifStorageTimer.current = null;
+            setNotifStorageScheduled(false);
+            settings.updateSettings({ pondReminderStorageAt: null });
+        }
     };
 
-    // Cancel scheduled notifications and reset state when inputs change
-    const handleFeedTypeChange = (v: string) => { setFeedType(v); cancelNotifs(); };
-    const handleFeedBagsChange = (v: string) => { setFeedBags(v); cancelNotifs(); };
-    const handleModeChange = (offline: boolean) => { setIsOffline(offline); cancelNotifs(); };
+    const handleFeedTypeChange = (v: string) => {
+        setFeedType(v);
+        cancelNotifs();
+        settings.updateSettings({ pondFeedType: v });
+    };
+
+    const handleFeedBagsChange = (v: string) => {
+        setFeedBags(v);
+        cancelNotifs();
+        const bags = parseInt(v, 10);
+        if (!isNaN(bags) && bags >= 1) settings.updateSettings({ pondFeedBags: bags });
+    };
+
+    const handleModeChange = (offline: boolean) => {
+        setIsOffline(offline);
+        cancelNotifs();
+        settings.updateSettings({ pondIsOffline: offline });
+    };
 
     const selectedFeed = FISH_FEED.find((f) => f.name === feedType) ?? FISH_FEED[0];
     const storageCapacity = ROE_STORAGE_LEVELS[settings.roeStorageLevel]?.capacity ?? 500;
@@ -77,7 +145,6 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
     }, [pondFish, globalSettings, settings.decorationLevel, selectedFeed.speedBonus, isOffline]);
 
     // Physical roe fill rate kg/hr (speed + offline, NO cash) — used for time until full
-    // Uses fishWeight × 0.02 × (3600 / cycleTime) per the game formula
     const roeKgPerHour = React.useMemo(() => {
         let total = 0;
         for (const entry of pondFish) {
@@ -96,17 +163,11 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
         ? (selectedFeed.durationMinutes * parseInt(feedBags || "1", 10)) / 60
         : Infinity;
 
-    // Time until storage fills = physical kg capacity / physical fill rate
     const hoursUntilFull = roeKgPerHour > 0 ? storageCapacity / roeKgPerHour : Infinity;
-
-    // Full storage value = total roe $/hr × time to fill storage
     const fullStorageValue = isFinite(hoursUntilFull) && hoursUntilFull > 0
         ? Math.round(totalRoePerHour * hoursUntilFull)
         : 0;
 
-    // Smarter fill time accounting for feed expiry mid-fill:
-    // During feed: fills at roeKgPerHour (includes feed speed).
-    // After feed expires: fills at the no-feed rate.
     const roeKgNoFeed = React.useMemo(() => {
         let total = 0;
         for (const entry of pondFish) {
@@ -123,14 +184,9 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
     const hoursUntilFullWithFeed = React.useMemo(() => {
         if (feedDurationHours === Infinity || roeKgPerHour <= 0) return hoursUntilFull;
         const kgDuringFeed = roeKgPerHour * feedDurationHours;
-        if (kgDuringFeed >= storageCapacity) {
-            // Fills before or exactly when feed expires
-            return storageCapacity / roeKgPerHour;
-        }
+        if (kgDuringFeed >= storageCapacity) return storageCapacity / roeKgPerHour;
         const remaining = storageCapacity - kgDuringFeed;
-        return roeKgNoFeed > 0
-            ? feedDurationHours + remaining / roeKgNoFeed
-            : Infinity;
+        return roeKgNoFeed > 0 ? feedDurationHours + remaining / roeKgNoFeed : Infinity;
     }, [feedDurationHours, roeKgPerHour, roeKgNoFeed, storageCapacity, hoursUntilFull]);
 
     const formatTime = (hours: number) => {
@@ -151,17 +207,66 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
         hours: number,
         body: string,
         timerRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>,
-        onScheduled: () => void
+        onScheduled: (fireAt: Date) => void,
+        onFired: () => void
     ) => {
         if (!("Notification" in window)) return;
         Notification.requestPermission().then((perm) => {
             if (perm === "granted" && isFinite(hours) && hours > 0) {
                 if (timerRef.current) clearTimeout(timerRef.current);
-                timerRef.current = setTimeout(() => new Notification("Abyss Fish Tracker", { body }), hours * 3600_000);
-                onScheduled();
+                const fireAt = new Date(Date.now() + hours * 3600_000);
+                timerRef.current = setTimeout(() => {
+                    new Notification("Abyss Fish Tracker", { body });
+                    timerRef.current = null;
+                    onFired();
+                }, hours * 3600_000);
+                onScheduled(fireAt);
             }
         });
     };
+
+    const handleFeedReminder = () => {
+        if (notifFeedScheduled) {
+            cancelNotifs({ feed: true, storage: false });
+        } else {
+            scheduleNotification(
+                feedDurationHours,
+                "Your fish feed has expired!",
+                notifFeedTimer,
+                (fireAt) => {
+                    setNotifFeedScheduled(true);
+                    settings.updateSettings({ pondReminderFeedAt: fireAt.toISOString() });
+                },
+                () => {
+                    setNotifFeedScheduled(false);
+                    settings.updateSettings({ pondReminderFeedAt: null });
+                }
+            );
+        }
+    };
+
+    const handleStorageReminder = () => {
+        if (notifStorageScheduled) {
+            cancelNotifs({ feed: false, storage: true });
+        } else {
+            scheduleNotification(
+                hoursUntilFullWithFeed,
+                "Your roe storage is full!",
+                notifStorageTimer,
+                (fireAt) => {
+                    setNotifStorageScheduled(true);
+                    settings.updateSettings({ pondReminderStorageAt: fireAt.toISOString() });
+                },
+                () => {
+                    setNotifStorageScheduled(false);
+                    settings.updateSettings({ pondReminderStorageAt: null });
+                }
+            );
+        }
+    };
+
+    void cashMultiplier; // used implicitly via totalRoePerHour
+    void toClockTime;
 
     if (pondFish.length === 0) return null;
 
@@ -254,12 +359,16 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
                             <div className="flex items-center gap-2 ml-auto">
                                 <span className="font-semibold">{formatTime(feedDurationHours)}</span>
                                 {"Notification" in (typeof window !== "undefined" ? window : {}) && (
-                                    <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 px-2"
-                                        onClick={() => scheduleNotification(feedDurationHours, "Your fish feed has expired!", notifFeedTimer, () => setNotifFeedScheduled(true))}
-                                        disabled={notifFeedScheduled}
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className={`h-6 text-xs gap-1 px-2 ${notifFeedScheduled ? "text-amber-400 hover:text-amber-300" : ""}`}
+                                        onClick={handleFeedReminder}
                                     >
-                                        <IconBell className="h-3 w-3" />
-                                        {notifFeedScheduled ? "Set" : "Remind Me"}
+                                        {notifFeedScheduled
+                                            ? <><IconBellOff className="h-3 w-3" /> Cancel</>
+                                            : <><IconBell className="h-3 w-3" /> Remind Me</>
+                                        }
                                     </Button>
                                 )}
                             </div>
@@ -270,12 +379,16 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
                         <div className="flex items-center gap-2 ml-auto">
                             <span className="font-semibold">{formatTime(hoursUntilFullWithFeed)}</span>
                             {isFinite(hoursUntilFullWithFeed) && "Notification" in (typeof window !== "undefined" ? window : {}) && (
-                                <Button variant="ghost" size="sm" className="h-6 text-xs gap-1 px-2"
-                                    onClick={() => scheduleNotification(hoursUntilFullWithFeed, "Your roe storage is full!", notifStorageTimer, () => setNotifStorageScheduled(true))}
-                                    disabled={notifStorageScheduled}
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={`h-6 text-xs gap-1 px-2 ${notifStorageScheduled ? "text-amber-400 hover:text-amber-300" : ""}`}
+                                    onClick={handleStorageReminder}
                                 >
-                                    <IconBell className="h-3 w-3" />
-                                    {notifStorageScheduled ? "Set" : "Remind Me"}
+                                    {notifStorageScheduled
+                                        ? <><IconBellOff className="h-3 w-3" /> Cancel</>
+                                        : <><IconBell className="h-3 w-3" /> Remind Me</>
+                                    }
                                 </Button>
                             )}
                         </div>

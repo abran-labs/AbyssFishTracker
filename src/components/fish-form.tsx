@@ -164,7 +164,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
 
   const sizeMult = selectedMutation?.sizeMultiplier ?? 1;
   const minSizeMult = Math.min(...MUTATIONS.map((m) => m.sizeMultiplier));
-  const maxSizeMult = Math.max(...MUTATIONS.map((m) => m.sizeMultiplier));
+  const maxSizeMult = Math.max(...MUTATIONS.map((m) => m.sizeMultiplier)) * 1.2; // 3% lucky catch gives +20% weight
   const isMiniBoss = selectedFish?.pondable === false;
   const dropMultiplier = isMiniBoss && dropType === "Head" ? 2 : 1;
   const pieceDivisor = isMiniBoss ? 3 : 1;

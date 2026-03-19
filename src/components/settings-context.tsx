@@ -12,6 +12,11 @@ export interface SettingsContextValue {
     decorationLevel: number;
     pondSortNoticeDismissed: boolean;
     ignoredSwapFishIds: string[];
+    pondIsOffline: boolean;
+    pondFeedType: string;
+    pondFeedBags: number;
+    pondReminderFeedAt: string | null;
+    pondReminderStorageAt: string | null;
     updateSettings: (partial: Partial<UserSettingsData>) => void;
     loaded: boolean;
 }
@@ -25,6 +30,11 @@ const DEFAULT: SettingsContextValue = {
     decorationLevel: 0,
     pondSortNoticeDismissed: false,
     ignoredSwapFishIds: [],
+    pondIsOffline: true,
+    pondFeedType: "None",
+    pondFeedBags: 1,
+    pondReminderFeedAt: null,
+    pondReminderStorageAt: null,
     updateSettings: () => { },
     loaded: false,
 };
@@ -66,6 +76,11 @@ export function SettingsProvider({ children, isLoggedIn }: SettingsProviderProps
         decorationLevel: 0,
         pondSortNoticeDismissed: false,
         ignoredSwapFishIds: [],
+        pondIsOffline: true,
+        pondFeedType: "None",
+        pondFeedBags: 1,
+        pondReminderFeedAt: null,
+        pondReminderStorageAt: null,
     });
     const [loaded, setLoaded] = React.useState(false);
 
@@ -85,6 +100,11 @@ export function SettingsProvider({ children, isLoggedIn }: SettingsProviderProps
                         decorationLevel: local.decorationLevel ?? 0,
                         pondSortNoticeDismissed: false,
                         ignoredSwapFishIds: [],
+                        pondIsOffline: true,
+                        pondFeedType: "None",
+                        pondFeedBags: 1,
+                        pondReminderFeedAt: null,
+                        pondReminderStorageAt: null,
                     };
                     setSettings(migrated);
                     saveToLocalStorage(migrated);

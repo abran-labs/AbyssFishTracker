@@ -158,6 +158,11 @@ export interface UserSettingsData {
   decorationLevel: number;
   pondSortNoticeDismissed: boolean;
   ignoredSwapFishIds: string[];
+  pondIsOffline: boolean;
+  pondFeedType: string;
+  pondFeedBags: number;
+  pondReminderFeedAt: string | null;
+  pondReminderStorageAt: string | null;
 }
 
 const DEFAULT_SETTINGS: UserSettingsData = {
@@ -169,6 +174,11 @@ const DEFAULT_SETTINGS: UserSettingsData = {
   decorationLevel: 0,
   pondSortNoticeDismissed: false,
   ignoredSwapFishIds: [],
+  pondIsOffline: true,
+  pondFeedType: "None",
+  pondFeedBags: 1,
+  pondReminderFeedAt: null,
+  pondReminderStorageAt: null,
 };
 
 // Returns null if no settings record exists yet (new account — caller should migrate from localStorage)
@@ -187,6 +197,11 @@ export async function getServerSettings(): Promise<UserSettingsData | null> {
     decorationLevel: settings.decorationLevel,
     pondSortNoticeDismissed: settings.pondSortNoticeDismissed,
     ignoredSwapFishIds: settings.ignoredSwapFishIds,
+    pondIsOffline: settings.pondIsOffline,
+    pondFeedType: settings.pondFeedType,
+    pondFeedBags: settings.pondFeedBags,
+    pondReminderFeedAt: settings.pondReminderFeedAt?.toISOString() ?? null,
+    pondReminderStorageAt: settings.pondReminderStorageAt?.toISOString() ?? null,
   };
 }
 
@@ -194,10 +209,23 @@ export async function saveServerSettings(
   data: Partial<UserSettingsData>
 ): Promise<UserSettingsData> {
   const { userId } = await requireUser();
+
+  // Convert ISO string timestamps to Date objects for Prisma DateTime fields
+  const { pondReminderFeedAt, pondReminderStorageAt, ...rest } = data;
+  const prismaData = {
+    ...rest,
+    ...(pondReminderFeedAt !== undefined
+      ? { pondReminderFeedAt: pondReminderFeedAt ? new Date(pondReminderFeedAt) : null }
+      : {}),
+    ...(pondReminderStorageAt !== undefined
+      ? { pondReminderStorageAt: pondReminderStorageAt ? new Date(pondReminderStorageAt) : null }
+      : {}),
+  };
+
   const settings = await prisma.userSettings.upsert({
     where: { userId },
-    update: data,
-    create: { userId, ...DEFAULT_SETTINGS, ...data },
+    update: prismaData,
+    create: { userId, ...DEFAULT_SETTINGS, ...prismaData },
   });
   return {
     race: settings.race,
@@ -208,5 +236,10 @@ export async function saveServerSettings(
     decorationLevel: settings.decorationLevel,
     pondSortNoticeDismissed: settings.pondSortNoticeDismissed,
     ignoredSwapFishIds: settings.ignoredSwapFishIds,
+    pondIsOffline: settings.pondIsOffline,
+    pondFeedType: settings.pondFeedType,
+    pondFeedBags: settings.pondFeedBags,
+    pondReminderFeedAt: settings.pondReminderFeedAt?.toISOString() ?? null,
+    pondReminderStorageAt: settings.pondReminderStorageAt?.toISOString() ?? null,
   };
 }

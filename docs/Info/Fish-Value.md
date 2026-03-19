@@ -144,6 +144,15 @@ Offline production runs at 50% rate.
 | Abyssal     | 8.5x       | 1.4x      | Any               |
 
 
+## Lucky Catch
+
+There is a **3% chance** on any catch to trigger a lucky catch, which applies a **1.2x weight multiplier** to the fish. This is separate and stacks on top of the mutation size multiplier.
+
+The effective maximum possible weight for a fish is therefore:
+```
+maxWeight = baseMaxWeight * maxSizeMultiplier * 1.2
+```
+
 ## Cycle Times
 
 | Rarity    | Cycle |
