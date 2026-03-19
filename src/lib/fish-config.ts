@@ -228,11 +228,21 @@ export function getRarityColor(fishName: string): string | undefined {
 }
 
 const WEIGHT_COLORS = {
-  small: "rgb(168, 168, 168)",
-  normal: "rgb(244, 244, 188)",
-  big: "rgb(212, 182, 113)",
-  giant: "rgb(236, 108, 76)",
+  tiny:   "rgb(210, 210, 210)",
+  small:  "rgb(170, 170, 170)",
+  normal: "rgb(150, 150, 150)",
+  big:    "rgb(255, 205, 89)",
+  giant:  "rgb(255, 80, 80)",
 };
+
+function lerpWeightColor(a: string, b: string, t: number): string {
+  const pa = a.match(/\d+/g)!.map(Number);
+  const pb = b.match(/\d+/g)!.map(Number);
+  const r = Math.round(pa[0] + (pb[0] - pa[0]) * t);
+  const g = Math.round(pa[1] + (pb[1] - pa[1]) * t);
+  const bv = Math.round(pa[2] + (pb[2] - pa[2]) * t);
+  return `rgb(${r}, ${g}, ${bv})`;
+}
 
 export function getRankColor(rank: number): string {
   if (rank === 1) return "rgb(241, 196, 65)";   // gold
@@ -280,15 +290,25 @@ export function getOptimizationColor(opt: number): string {
   return `rgb(${r}, ${g}, ${b})`;
 }
 
-export function getWeightColor(weight: number, fishName: string): string {
+export function getWeightColor(weight: number, fishName: string, mutation?: string): string {
   const fish = FISH_SPECIES.find((f) => f.name === fishName);
   if (!fish) return WEIGHT_COLORS.normal;
   const range = fish.maxWeight - fish.minWeight;
   if (range === 0) return WEIGHT_COLORS.normal;
-  const position = (weight - fish.minWeight) / range;
-  if (position < 0.25) return WEIGHT_COLORS.small;
-  if (position < 0.5) return WEIGHT_COLORS.normal;
-  if (position < 0.75) return WEIGHT_COLORS.big;
-  return WEIGHT_COLORS.giant;
+  const sizeMult = mutation
+    ? (MUTATIONS.find((m) => m.name === mutation)?.sizeMultiplier ?? 1)
+    : 1;
+  const v12 = Math.min(1.2, Math.max(0, (weight / sizeMult - fish.minWeight) / range));
+  if (v12 <= 0.05) {
+    return WEIGHT_COLORS.tiny;
+  } else if (v12 <= 0.3) {
+    return lerpWeightColor(WEIGHT_COLORS.tiny, WEIGHT_COLORS.small, Math.min(1, (v12 - 0.05) / 0.25));
+  } else if (v12 <= 0.7) {
+    return lerpWeightColor(WEIGHT_COLORS.small, WEIGHT_COLORS.normal, Math.min(1, (v12 - 0.3) / 0.4));
+  } else if (v12 <= 1.0) {
+    return lerpWeightColor(WEIGHT_COLORS.normal, WEIGHT_COLORS.big, Math.min(1, (v12 - 0.7) / 0.3));
+  } else {
+    return lerpWeightColor(WEIGHT_COLORS.big, WEIGHT_COLORS.giant, Math.min(1, (v12 - 1.0) / 0.2));
+  }
 }
 

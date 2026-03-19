@@ -514,7 +514,7 @@ export function FishPondTab({
                         {entry.fishName}
                       </TableCell>
                       <TableCell
-                        style={{ color: getWeightColor(entry.weight, entry.fishName) }}
+                        style={{ color: getWeightColor(entry.weight, entry.fishName, entry.mutation) }}
                       >
                         {entry.weight}kg
                       </TableCell>

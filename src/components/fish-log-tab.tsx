@@ -367,7 +367,7 @@ export function FishLogTab({
                     <TableCell style={{ color: getRarityColor(entry.fishName) }}>
                       {entry.fishName}
                     </TableCell>
-                    <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName) }}>
+                    <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName, entry.mutation) }}>
                       {entry.weight}kg
                     </TableCell>
                     <TableCell style={entry.stars > 0 ? { color: STAR_COLOR } : undefined}>

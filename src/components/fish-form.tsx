@@ -256,7 +256,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
           }
           style={
             selectedFish && weightValidation?.valid
-              ? { color: getWeightColor(weight, fishName) }
+              ? { color: getWeightColor(weight, fishName, mutation) }
               : undefined
           }
         />
