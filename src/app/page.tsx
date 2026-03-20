@@ -186,7 +186,7 @@ export default function Home() {
                 <br />
                 Mini Bosses have been added to the calculator!
                 <br />
-                🎉 Thanks so much for 10k+ calculations!
+                🎉 Thanks for 100+ Users!
               </p>
             </TabsContent>
 
