@@ -73,6 +73,16 @@ const AREA_ORDER = [
   "Forgotten Deep",
 ] as const;
 
+const ZONE_CONFIG: Record<string, { color: string; icon: string }> = {
+  "Ancient Sands":     { color: "rgb(255, 189, 123)", icon: "/zones/Ancient Sands.png" },
+  "Angler Cave":       { color: "rgb(113, 113, 113)", icon: "/zones/Angler Cave.png" },
+  "Forgotten Deep":    { color: "rgb(115, 255, 162)", icon: "/zones/Forgotten Deep.png" },
+  "Gloomspore Valley": { color: "rgb(197, 151, 235)", icon: "/zones/Gloomspore Valley.png" },
+  "Ocean":             { color: "rgb(85, 170, 255)",  icon: "/zones/Ocean.png" },
+  "Spirit Roots":      { color: "rgb(158, 253, 255)", icon: "/zones/Spirit Roots.png" },
+  "Sunken Wilds":      { color: "rgb(179, 235, 149)", icon: "/zones/Sunken Wilds.png" },
+};
+
 const RARITY_RANK: Record<string, number> = {
   Secret: 0,
   Mythical: 1,
@@ -104,6 +114,8 @@ const fishOptions = displayAreas.flatMap((area) =>
       description: f.rarity,
       color: RARITY_COLORS[f.rarity],
       group: area,
+      groupColor: ZONE_CONFIG[area]?.color,
+      groupIcon: ZONE_CONFIG[area]?.icon,
     }))
 );
 

@@ -11,6 +11,7 @@ export interface ComboboxOption {
   color?: string;
   group?: string;
   groupColor?: string;
+  groupIcon?: string;
 }
 
 export interface ComboboxProps {
@@ -240,7 +241,16 @@ export function Combobox({
                           )}
                           style={option.groupColor ? { color: option.groupColor } : undefined}
                         >
-                          {option.group}
+                          <span className="flex items-center gap-1.5">
+                            {option.groupIcon && (
+                              <img
+                                src={option.groupIcon}
+                                alt=""
+                                className="h-5 w-5 rounded-full object-cover"
+                              />
+                            )}
+                            {option.group}
+                          </span>
                           <ChevronDown
                             className={cn(
                               "h-3 w-3 transition-transform",
