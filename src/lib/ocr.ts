@@ -67,7 +67,11 @@ function similarity(a: string, b: string): number {
     const bl = b.toLowerCase().trim();
     if (al === bl) return 1;
     if (al === "" || bl === "") return 0;
-    if (al.includes(bl) || bl.includes(al)) return 0.9;
+    // Scale by coverage so longer, more specific names are preferred.
+    // e.g. "King Anglerfish" OCR line vs "Anglerfish" fish name: 0.9 * (10/15) = 0.6
+    //      "King Anglerfish" OCR line vs "King Anglerfish":       1.0 (exact, above)
+    if (al.includes(bl)) return 0.9 * (bl.length / al.length);
+    if (bl.includes(al)) return 0.8 * (al.length / bl.length);
 
     // Character-level Dice coefficient
     const bigrams = (s: string) => {
