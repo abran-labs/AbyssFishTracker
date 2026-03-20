@@ -10,7 +10,7 @@ export function calculateValue(
 ): number {
   const baseWeight = Math.round(weight / sizeMultiplier * 10) / 10;
   const correctedWeight = baseWeight * sizeMultiplier;
-  return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
+  return correctedWeight * baseValue * starMultiplier * mutationMultiplier;
 }
 
 export function calculateOptimization(

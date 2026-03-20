@@ -39,6 +39,7 @@ export interface FishFormData {
   stars: number;
   mutation: string;
   value: number;
+  rawValue: number;
 }
 
 interface FishFormProps {
@@ -190,13 +191,14 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
     ) {
       return null;
     }
-    const value = calculateValue(
+    const rawValue = calculateValue(
       weight,
       selectedFish.baseValue * dropMultiplier,
       effectiveStarMultiplier,
       selectedMutation.multiplier,
       selectedMutation.sizeMultiplier
     );
+    const value = Math.round(rawValue);
     const loggedName = isMiniBoss ? `${fishName} (${dropType})` : fishName;
     return {
       fishName: loggedName,
@@ -204,6 +206,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
       stars: effectiveStars,
       mutation,
       value,
+      rawValue,
     };
   }, [
     fishName,
@@ -370,7 +373,7 @@ export function FishForm({ renderActions, initialData, settings }: FishFormProps
         const cashMultiplier =
           (1 + (RACES.find((r) => r.name === globalSettings.race)?.cashBonus ?? 0)) *
           (1 + artBonusRaw);
-        const boostedValue = Math.round(formData.value * cashMultiplier);
+        const boostedValue = Math.round(formData.rawValue * cashMultiplier);
 
         const boostPct = hasActiveBoosts
           ? `+${Number(((cashMultiplier - 1) * 100).toFixed(4))}%`
