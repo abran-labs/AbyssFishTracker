@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { extractFishData, type OcrResult } from "@/lib/ocr";
+import { extractFishData, parseDiscordText, type OcrResult } from "@/lib/ocr";
 import { IconPhoto, IconLoader2, IconInfoCircle } from "@tabler/icons-react";
 import Image from "next/image";
 
@@ -17,6 +17,7 @@ export function ImagePasteZone({ onResult }: ImagePasteZoneProps) {
     const [dragOver, setDragOver] = React.useState(false);
     const [zoomed, setZoomed] = React.useState(false);
     const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+    const [resultSource, setResultSource] = React.useState<"image" | "discord">("image");
     const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     const processImage = React.useCallback(
@@ -30,6 +31,7 @@ export function ImagePasteZone({ onResult }: ImagePasteZoneProps) {
 
             try {
                 const result = await extractFishData(source);
+                setResultSource("image");
                 setStatus("done");
                 onResult(result);
                 // Intentionally leaving it in "done" state so they can verify the image
@@ -57,10 +59,23 @@ export function ImagePasteZone({ onResult }: ImagePasteZoneProps) {
                     return;
                 }
             }
+            // No image — check for Discord-formatted text
+            const textItem = Array.from(items).find((i) => i.type === "text/plain");
+            if (textItem) {
+                textItem.getAsString((text) => {
+                    const result = parseDiscordText(text);
+                    if (result) {
+                        e.preventDefault();
+                        setResultSource("discord");
+                        setStatus("done");
+                        onResult(result);
+                    }
+                });
+            }
         };
         document.addEventListener("paste", handlePaste);
         return () => document.removeEventListener("paste", handlePaste);
-    }, [processImage]);
+    }, [processImage, onResult]);
 
     const handleDrop = (e: React.DragEvent) => {
         e.preventDefault();
@@ -115,36 +130,44 @@ export function ImagePasteZone({ onResult }: ImagePasteZoneProps) {
             ) : status === "done" ? (
                 <>
                     <div className="flex flex-col items-center justify-center gap-2 py-2">
-                        <button
-                            type="button"
-                            className="flex flex-col items-center opacity-90 hover:opacity-100 transition-opacity cursor-zoom-in"
-                            title="Click to view full size"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setZoomed(true);
-                            }}
-                        >
-                            <div className="relative w-48 h-32 rounded overflow-hidden shadow-sm border border-border/50">
-                                {previewUrl && (
-                                    <Image
-                                        src={previewUrl}
-                                        alt="Uploaded screenshot"
-                                        fill
-                                        className="object-contain"
-                                    />
-                                )}
-                            </div>
-                        </button>
+                        {resultSource === "image" && (
+                            <button
+                                type="button"
+                                className="flex flex-col items-center opacity-90 hover:opacity-100 transition-opacity cursor-zoom-in"
+                                title="Click to view full size"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setZoomed(true);
+                                }}
+                            >
+                                <div className="relative w-48 h-32 rounded overflow-hidden shadow-sm border border-border/50">
+                                    {previewUrl && (
+                                        <Image
+                                            src={previewUrl}
+                                            alt="Uploaded screenshot"
+                                            fill
+                                            className="object-contain"
+                                        />
+                                    )}
+                                </div>
+                            </button>
+                        )}
 
                         <div className="flex flex-col items-center mt-2 text-center pointer-events-none">
-                            <span className="text-sm text-green-400 font-medium">✓ Auto-filled from image</span>
-                            <span className="text-[11px] text-muted-foreground mt-1 max-w-[220px]">
-                                Autofill may contain errors.<br />Please double check the values.
-                            </span>
+                            {resultSource === "discord" ? (
+                                <span className="text-sm text-green-400 font-medium">✓ Auto-filled from Discord</span>
+                            ) : (
+                                <>
+                                    <span className="text-sm text-green-400 font-medium">✓ Auto-filled from image</span>
+                                    <span className="text-[11px] text-muted-foreground mt-1 max-w-[220px]">
+                                        Autofill may contain errors.<br />Please double check the values.
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {zoomed && previewUrl && (
+                    {zoomed && previewUrl && resultSource === "image" && (
                         <div
                             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 cursor-zoom-out"
                             onClick={(e) => {

@@ -1,14 +1,34 @@
 "use client";
 
 import * as React from "react";
-import { FishForm } from "@/components/fish-form";
+import { FishForm, type FishFormData } from "@/components/fish-form";
 import { ImagePasteZone } from "@/components/image-paste-zone";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { type OcrResult } from "@/lib/ocr";
 import { useSettings } from "@/components/settings-context";
 import { FISH_SPECIES, CYCLE_TIMES, RACES, ARTIFACTS, DECORATION_LEVELS } from "@/lib/fish-config";
 import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
 import { type GlobalSettings } from "@/lib/types";
+import { Copy, Check } from "lucide-react";
+
+const DISCORD_SEP = "> ---------------------------------------->";
+
+function buildDiscordText(formData: FishFormData, baseRoe: number | null): string {
+  const displayName = formData.fishName.replace(/ \((Head|Meat)\)$/, (_, dt) => ` ${dt}`);
+  const starLabel = formData.stars === 0 ? "Dead" : `${formData.stars} Star`;
+  const lines = [
+    `**${displayName}**`,
+    `**\`${formData.weight.toLocaleString()} kg\`** | **\`${starLabel}\`** | **\`${formData.mutation}\`**`,
+    DISCORD_SEP,
+    `> :moneybag: Base Sell: \`$${formData.value.toLocaleString()}\``,
+  ];
+  if (baseRoe !== null) {
+    lines.push(`> :fish: Base Roe $/hour: \`$${baseRoe.toLocaleString()}\``);
+  }
+  lines.push(DISCORD_SEP);
+  return lines.join("\n");
+}
 
 export function CalculatorTab() {
   const [ocrData, setOcrData] = React.useState<{
@@ -19,6 +39,7 @@ export function CalculatorTab() {
   } | undefined>(undefined);
   const [formKey, setFormKey] = React.useState(0);
   const settings = useSettings();
+  const [copied, setCopied] = React.useState(false);
 
   const handleOcrResult = React.useCallback((result: OcrResult) => {
     const baseName = result.fishName ?? undefined;
@@ -39,7 +60,32 @@ export function CalculatorTab() {
       </CardHeader>
       <CardContent className="space-y-4">
         <ImagePasteZone onResult={handleOcrResult} />
-        <FishForm key={formKey} initialData={ocrData} renderActions={() => null} settings={settings} />
+        <FishForm
+          key={formKey}
+          initialData={ocrData}
+          settings={settings}
+          renderActions={(formData) => {
+            if (!formData) return null;
+            const fish = FISH_SPECIES.find((f) => f.name === formData.fishName.replace(/ \((Meat|Head)\)$/, ""));
+            const isPondable = fish?.pondable !== false;
+            const hasMutation = formData.mutation !== "None";
+            const baseRoe = isPondable && fish ? calculateBaseRoePerHour(formData.value, hasMutation, fish.rarity) : null;
+            return (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigator.clipboard.writeText(buildDiscordText(formData, baseRoe));
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                {copied ? "Copied!" : "Copy for Discord"}
+              </Button>
+            );
+          }}
+        />
       </CardContent>
     </Card>
   );

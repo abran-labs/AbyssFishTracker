@@ -8,6 +8,58 @@ export interface OcrResult {
     mutation: string | null;
     dropType: "Head" | "Meat" | null;
     rawText: string;
+    source?: "image" | "discord";
+}
+
+export function parseDiscordText(text: string): OcrResult | null {
+    const lines = text.trim().split("\n");
+    if (lines.length < 2) return null;
+
+    // Line 1: **Fish Name** or **Fish Name Head** / **Fish Name Meat**
+    const nameMatch = lines[0].match(/^\*\*(.+?)\*\*$/);
+    if (!nameMatch) return null;
+
+    const rawName = nameMatch[1].trim();
+    let fishNameStr = rawName;
+    let dropType: "Head" | "Meat" | null = null;
+
+    if (rawName.endsWith(" Head")) {
+        fishNameStr = rawName.slice(0, -5);
+        dropType = "Head";
+    } else if (rawName.endsWith(" Meat")) {
+        fishNameStr = rawName.slice(0, -5);
+        dropType = "Meat";
+    }
+
+    const fish = FISH_SPECIES.find((f) => f.name.toLowerCase() === fishNameStr.toLowerCase());
+    if (!fish) return null;
+
+    // Line 2: **`4,521 kg`** | **`3 Star`** | **`Golden`**
+    const statsMatch = lines[1].match(/^\*\*`(.+?) kg`\*\* \| \*\*`(.+?)`\*\* \| \*\*`(.+?)`\*\*$/);
+    if (!statsMatch) return null;
+
+    const weight = parseFloat(statsMatch[1].replace(/,/g, ""));
+    if (isNaN(weight)) return null;
+
+    let stars: number | null = null;
+    if (statsMatch[2] === "Dead") stars = 0;
+    else {
+        const m = statsMatch[2].match(/^(\d) Star$/);
+        if (m) stars = parseInt(m[1]);
+    }
+
+    const mutationStr = statsMatch[3];
+    const mutation = MUTATIONS.find((m) => m.name === mutationStr)?.name ?? null;
+
+    return {
+        fishName: fish.name,
+        weight,
+        stars,
+        mutation,
+        dropType,
+        rawText: text,
+        source: "discord",
+    };
 }
 
 function similarity(a: string, b: string): number {
