@@ -3,12 +3,14 @@
 ## Fish Price Formula
 
 ```
-baseWeight = displayedWeight / sizeMultiplier
+baseWeight = round(displayedWeight / sizeMultiplier, 1)
 correctedWeight = baseWeight * sizeMultiplier
-Value = math.round(correctedWeight * basevalue * starMultiplier * mutationMultiplier)
+basePrice = round(correctedWeight * baseValue)
+starPrice = round(basePrice * starMultiplier)
+Value = round(starPrice * mutationMultiplier)
 BoostedValue = round(Value * bonusMultiplier)
 ```
-
+> Credits to **@seb._.bas** on Discord for the correctedWeight formula
 
 ## Bonus Multiplier Formula
 
