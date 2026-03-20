@@ -134,7 +134,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border/40 px-4 lg:px-8 py-4">
         <div className="w-full flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Abyss-Fish-Tracker</h1>
+          <a href="https://abyss-fish-tracker.abran.dev" className="text-xl font-semibold hover:opacity-75 transition-opacity">Abyss-Fish-Tracker</a>
 
           {fishCount !== null && userCount !== null && calculatedCount !== null && (
             <div className="hidden sm:flex items-center gap-4 text-sm text-muted-foreground">
