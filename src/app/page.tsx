@@ -138,11 +138,11 @@ export default function Home() {
 
           {fishCount !== null && userCount !== null && calculatedCount !== null && (
             <div className="hidden sm:flex items-center gap-4 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{userCount} users</span>
+              <span className="flex items-center gap-1.5"><Users className="h-4 w-4" />{userCount.toLocaleString()} users</span>
               <span className="text-border">·</span>
-              <span className="flex items-center gap-1.5"><Image src="/fish.png" alt="Fish" width={16} height={16} className="inline-block" style={{ filter: "brightness(0.65)" }} />{fishCount} fish logged</span>
+              <span className="flex items-center gap-1.5"><Image src="/fish.png" alt="Fish" width={16} height={16} className="inline-block" style={{ filter: "brightness(0.65)" }} />{fishCount.toLocaleString()} fish logged</span>
               <span className="text-border">·</span>
-              <span className="flex items-center gap-1.5"><Calculator className="h-4 w-4" />{(calculatedCount ?? 0) + pendingCalculations} fish calculated</span>
+              <span className="flex items-center gap-1.5"><Calculator className="h-4 w-4" />{((calculatedCount ?? 0) + pendingCalculations).toLocaleString()} fish calculated</span>
             </div>
           )}
 
