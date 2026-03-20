@@ -172,7 +172,7 @@ const DEFAULT_SETTINGS: UserSettingsData = {
   artifact3: "None",
   roeStorageLevel: 0,
   decorationLevel: 0,
-  pondSortNoticeDismissed: false,
+  pondSortNoticeDismissed: true,
   ignoredSwapFishIds: [],
   pondIsOffline: true,
   pondFeedType: "None",
