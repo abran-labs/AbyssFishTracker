@@ -5,9 +5,7 @@
 ```
 baseWeight = round(displayedWeight / sizeMultiplier, 1)
 correctedWeight = baseWeight * sizeMultiplier
-basePrice = round(correctedWeight * baseValue)
-starPrice = round(basePrice * starMultiplier)
-Value = round(starPrice * mutationMultiplier)
+Value = round(correctedWeight * baseValue * starMultiplier * mutationMultiplier)
 BoostedValue = round(Value * bonusMultiplier)
 ```
 > Credits to **@seb._.bas** on Discord for the correctedWeight formula

@@ -10,9 +10,7 @@ export function calculateValue(
 ): number {
   const baseWeight = Math.round(weight / sizeMultiplier * 10) / 10;
   const correctedWeight = baseWeight * sizeMultiplier;
-  const basePrice = Math.round(correctedWeight * baseValue);
-  const starPrice = Math.round(basePrice * starMultiplier);
-  return Math.round(starPrice * mutationMultiplier);
+  return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
 }
 
 export function calculateOptimization(
