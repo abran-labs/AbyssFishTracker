@@ -227,8 +227,10 @@ export function FishLogTab({
   }, [entries, sortKey, sortDir, rankMap]);
 
   const handleOcrResult = React.useCallback((result: OcrResult) => {
+    const baseName = result.fishName ?? undefined;
+    const fishName = baseName && result.dropType ? `${baseName} (${result.dropType})` : baseName;
     setOcrData({
-      fishName: result.fishName ?? undefined,
+      fishName,
       weight: result.weight ?? undefined,
       stars: result.stars ?? undefined,
       mutation: result.mutation ?? undefined,

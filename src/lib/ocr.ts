@@ -6,6 +6,7 @@ export interface OcrResult {
     weight: number | null;
     stars: number | null;
     mutation: string | null;
+    dropType: "Head" | "Meat" | null;
     rawText: string;
 }
 
@@ -168,11 +169,11 @@ function extractMutation(text: string): string | null {
     return null;
 }
 
-function extractFishName(text: string): string | null {
+function extractFishName(text: string): { name: string; dropType: "Head" | "Meat" | null } | null {
     const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
 
     // The fish name is typically on its own line, try each line
-    let best: { name: string; score: number } | null = null;
+    let best: { name: string; score: number; dropType: "Head" | "Meat" | null } | null = null;
 
     for (const line of lines) {
         // Skip lines that look like weight, mutation multiplier, or description
@@ -183,12 +184,18 @@ function extractFishName(text: string): string | null {
         if (match) {
             const score = similarity(line, match.name);
             if (!best || score > best.score) {
-                best = { name: match.name, score };
+                // If this is a mini-boss, check for "Head" or "Meat" on the same line
+                let dropType: "Head" | "Meat" | null = null;
+                if (match.pondable === false) {
+                    if (/\bhead\b/i.test(line)) dropType = "Head";
+                    else if (/\bmeat\b/i.test(line)) dropType = "Meat";
+                }
+                best = { name: match.name, score, dropType };
             }
         }
     }
 
-    return best?.name ?? null;
+    return best ? { name: best.name, dropType: best.dropType } : null;
 }
 
 // Shared worker instance
@@ -290,7 +297,9 @@ export async function extractFishData(
     const rawProcessed = processedRun.data.text.trim();
     const combinedText = rawNormal + "\n" + rawProcessed;
 
-    const fishName = extractFishName(rawNormal) || extractFishName(rawProcessed);
+    const fishResult = extractFishName(rawNormal) ?? extractFishName(rawProcessed);
+    const fishName = fishResult?.name ?? null;
+    const dropType = fishResult?.dropType ?? null;
     let weight = extractWeight(rawProcessed) || extractWeight(rawNormal);
     const stars = extractStars(rawNormal) || extractStars(rawProcessed);
     let mutation = extractMutation(rawNormal) || extractMutation(rawProcessed);
@@ -344,6 +353,7 @@ export async function extractFishData(
         weight,
         stars,
         mutation,
+        dropType,
         rawText: combinedText,
     };
 }
