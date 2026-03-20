@@ -332,13 +332,18 @@ export function FishPondTab({
                     <div className="flex-1 flex flex-col gap-0.5 min-w-0 bg-green-500/5 p-2 rounded-md border border-green-500/10">
                       <div className="text-xs font-semibold text-green-400 mb-1">Add</div>
                       <div className="bg-background/80 px-2 py-1.5 rounded text-sm border shadow-sm">
-                        <div className="flex items-baseline justify-between gap-2 overflow-hidden">
+                        <div className="flex items-baseline gap-2 overflow-hidden">
                           <span
                             className="font-medium truncate"
                             style={{ color: getRarityColor(wantFish.fishName) }}
                           >
-                            {wantFish.fishName}{wantFish.mutation !== "None" && <span className="text-muted-foreground font-normal"> ({wantFish.mutation})</span>}
+                            {wantFish.fishName}
                           </span>
+                          <span className="text-muted-foreground font-normal shrink-0"> | </span>
+                          <span className="font-normal shrink-0" style={{ color: getWeightColor(wantFish.weight, wantFish.fishName, wantFish.mutation) }}>{wantFish.weight}kg</span>
+                          <span className="text-muted-foreground font-normal shrink-0"> | </span>
+                          {wantFish.stars > 0 && <><span className="font-normal shrink-0" style={{ color: STAR_COLOR }}>{wantFish.stars}★</span><span className="text-muted-foreground font-normal shrink-0"> | </span></>}
+                          <span className="font-normal shrink-0" style={MUTATION_COLORS[wantFish.mutation] ? { color: MUTATION_COLORS[wantFish.mutation] } : undefined}>{wantFish.mutation}</span><span className="text-muted-foreground font-normal shrink-0"> | </span>
                           <span
                             className="text-xs font-semibold shrink-0"
                             style={{ color: getValueColor(Math.round(wantFish.value * (cashBonus + 1)), allValues) }}
@@ -357,13 +362,18 @@ export function FishPondTab({
                     <div className="flex-1 flex flex-col gap-0.5 min-w-0 bg-red-500/5 p-2 rounded-md border border-red-500/10">
                       <div className="text-xs font-semibold text-red-400 mb-1">Remove</div>
                       <div className="bg-background/80 px-2 py-1.5 rounded text-sm border shadow-sm">
-                        <div className="flex items-baseline justify-between gap-2 overflow-hidden">
+                        <div className="flex items-baseline gap-2 overflow-hidden">
                           <span
                             className="font-medium truncate"
                             style={{ color: getRarityColor(haveFish.fishName) }}
                           >
-                            {haveFish.fishName}{haveFish.mutation !== "None" && <span className="text-muted-foreground font-normal"> ({haveFish.mutation})</span>}
+                            {haveFish.fishName}
                           </span>
+                          <span className="text-muted-foreground font-normal shrink-0"> | </span>
+                          <span className="font-normal shrink-0" style={{ color: getWeightColor(haveFish.weight, haveFish.fishName, haveFish.mutation) }}>{haveFish.weight}kg</span>
+                          <span className="text-muted-foreground font-normal shrink-0"> | </span>
+                          {haveFish.stars > 0 && <><span className="font-normal shrink-0" style={{ color: STAR_COLOR }}>{haveFish.stars}★</span><span className="text-muted-foreground font-normal shrink-0"> | </span></>}
+                          <span className="font-normal shrink-0" style={MUTATION_COLORS[haveFish.mutation] ? { color: MUTATION_COLORS[haveFish.mutation] } : undefined}>{haveFish.mutation}</span><span className="text-muted-foreground font-normal shrink-0"> | </span>
                           <span
                             className="text-xs font-semibold shrink-0"
                             style={{ color: getValueColor(Math.round(haveFish.value * (cashBonus + 1)), allValues) }}
@@ -383,10 +393,15 @@ export function FishPondTab({
                   <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-green-500/5 px-3 py-2 border border-green-500/10">
                     <span className="text-green-400 shrink-0">Add:</span>
                     <span style={{ color: getRarityColor(wantFish.fishName) }}>
-                      {wantFish.fishName}{wantFish.mutation !== "None" && <span className="text-muted-foreground"> ({wantFish.mutation})</span>}
+                      {wantFish.fishName}
                     </span>
+                    <span className="text-muted-foreground"> | </span>
+                    <span style={{ color: getWeightColor(wantFish.weight, wantFish.fishName, wantFish.mutation) }}>{wantFish.weight}kg</span>
+                    <span className="text-muted-foreground"> | </span>
+                    {wantFish.stars > 0 && <><span style={{ color: STAR_COLOR }}>{wantFish.stars}★</span><span className="text-muted-foreground"> | </span></>}
+                    <span style={MUTATION_COLORS[wantFish.mutation] ? { color: MUTATION_COLORS[wantFish.mutation] } : undefined}>{wantFish.mutation}</span><span className="text-muted-foreground"> | </span>
                     <span className="text-muted-foreground">
-                      ({wantFish.weight}kg, ${wantFish.value.toLocaleString()})
+                      ${wantFish.value.toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">
                       (${getDisplayRoe(wantFish).toLocaleString()}/hr)
@@ -398,10 +413,15 @@ export function FishPondTab({
                   <div key={i} className="flex items-center gap-2 text-sm rounded-md bg-red-500/5 px-3 py-2 border border-red-500/10">
                     <span className="text-red-400 shrink-0">Remove:</span>
                     <span style={{ color: getRarityColor(haveFish.fishName) }}>
-                      {haveFish.fishName}{haveFish.mutation !== "None" && <span className="text-muted-foreground"> ({haveFish.mutation})</span>}
+                      {haveFish.fishName}
                     </span>
+                    <span className="text-muted-foreground"> | </span>
+                    <span style={{ color: getWeightColor(haveFish.weight, haveFish.fishName, haveFish.mutation) }}>{haveFish.weight}kg</span>
+                    <span className="text-muted-foreground"> | </span>
+                    {haveFish.stars > 0 && <><span style={{ color: STAR_COLOR }}>{haveFish.stars}★</span><span className="text-muted-foreground"> | </span></>}
+                    <span style={MUTATION_COLORS[haveFish.mutation] ? { color: MUTATION_COLORS[haveFish.mutation] } : undefined}>{haveFish.mutation}</span><span className="text-muted-foreground"> | </span>
                     <span className="text-muted-foreground">
-                      ({haveFish.weight}kg, ${haveFish.value.toLocaleString()})
+                      ${haveFish.value.toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">
                       (${getDisplayRoe(haveFish).toLocaleString()}/hr)
