@@ -75,13 +75,13 @@ const AREA_ORDER = [
 ] as const;
 
 const ZONE_CONFIG: Record<string, { color: string; icon: string }> = {
-  "Ancient Sands":     { color: "rgb(255, 189, 123)", icon: "/zones/Ancient Sands.png" },
-  "Angler Cave":       { color: "rgb(113, 113, 113)", icon: "/zones/Angler Cave.png" },
-  "Forgotten Deep":    { color: "rgb(115, 255, 162)", icon: "/zones/Forgotten Deep.png" },
-  "Gloomspore Valley": { color: "rgb(197, 151, 235)", icon: "/zones/Gloomspore Valley.png" },
-  "Ocean":             { color: "rgb(85, 170, 255)",  icon: "/zones/Ocean.png" },
-  "Spirit Roots":      { color: "rgb(158, 253, 255)", icon: "/zones/Spirit Roots.png" },
-  "Sunken Wilds":      { color: "rgb(179, 235, 149)", icon: "/zones/Sunken Wilds.png" },
+  "Ancient Sands":     { color: "rgb(255, 189, 123)", icon: "/zones/Ancient Sands.webp" },
+  "Angler Cave":       { color: "rgb(113, 113, 113)", icon: "/zones/Angler Cave.webp" },
+  "Forgotten Deep":    { color: "rgb(115, 255, 162)", icon: "/zones/Forgotten Deep.webp" },
+  "Gloomspore Valley": { color: "rgb(197, 151, 235)", icon: "/zones/Gloomspore Valley.webp" },
+  "Ocean":             { color: "rgb(85, 170, 255)",  icon: "/zones/Ocean.webp" },
+  "Spirit Roots":      { color: "rgb(158, 253, 255)", icon: "/zones/Spirit Roots.webp" },
+  "Sunken Wilds":      { color: "rgb(179, 235, 149)", icon: "/zones/Sunken Wilds.webp" },
 };
 
 const RARITY_RANK: Record<string, number> = {

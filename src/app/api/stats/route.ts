@@ -1,13 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 
+function cached(data: object) {
+  return NextResponse.json(data, {
+    headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+  });
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const stat = searchParams.get("stat");
 
   if (stat === "fish") {
     const fish = await prisma.fishEntry.count();
-    return NextResponse.json({
+    return cached({
       schemaVersion: 1,
       label: "fish logged",
       message: String(fish),
@@ -19,7 +25,7 @@ export async function GET(request: Request) {
     const statRecord = await prisma.globalStat.findUnique({
       where: { name: "fish_calculated" }
     });
-    return NextResponse.json({
+    return cached({
       schemaVersion: 1,
       label: "fish calculated",
       message: String(statRecord?.value || 0),
@@ -28,7 +34,7 @@ export async function GET(request: Request) {
   }
 
   const users = await prisma.user.count();
-  return NextResponse.json({
+  return cached({
     schemaVersion: 1,
     label: "users",
     message: String(users),

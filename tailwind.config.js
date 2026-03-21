@@ -17,10 +17,6 @@ module.exports = {
     			sans: [
     				'var(--font-quicksand)'
     			],
-    			anurati: [
-    				'Anurati',
-    				'sans-serif'
-    			]
     		},
     		colors: {
     			background: 'hsl(var(--background))',
