@@ -36,7 +36,6 @@ export interface FishEntry {
   weight: number;
   stars: number;
   mutation: string;
-  value: number;
   createdAt: string;
   updatedAt: string;
 }

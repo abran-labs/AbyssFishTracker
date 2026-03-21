@@ -16,7 +16,6 @@ function toFishEntry(row: {
   weight: number;
   stars: number;
   mutation: string;
-  value: number;
   createdAt: Date;
   updatedAt: Date;
 }): FishEntry {
@@ -26,7 +25,6 @@ function toFishEntry(row: {
     weight: row.weight,
     stars: row.stars,
     mutation: row.mutation,
-    value: row.value,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -51,7 +49,6 @@ export async function addServerEntry(
       weight: data.weight,
       stars: data.stars,
       mutation: data.mutation,
-      value: data.value,
       userId,
     },
   });
@@ -77,7 +74,6 @@ export async function updateServerEntry(
       weight: data.weight,
       stars: data.stars,
       mutation: data.mutation,
-      value: data.value,
     },
   });
   return toFishEntry(row);

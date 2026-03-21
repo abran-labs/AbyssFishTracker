@@ -33,7 +33,7 @@ function buildDiscordText(formData: FishFormData, baseRoe: number | null): strin
 }
 
 function fishFingerprint(formData: FishFormData): string {
-  return `${formData.fishName}|${formData.weight}|${formData.stars}|${formData.mutation}|${formData.value}`;
+  return `${formData.fishName}|${formData.weight}|${formData.stars}|${formData.mutation}`;
 }
 
 interface CalculatorTabProps {
@@ -111,7 +111,6 @@ export function CalculatorTab({ onAdd }: CalculatorTabProps) {
                           weight: formData.weight,
                           stars: formData.stars,
                           mutation: formData.mutation,
-                          value: formData.value,
                         });
                         setSavedFingerprint(fp);
                       }}

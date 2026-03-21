@@ -6,7 +6,7 @@ import { ImagePasteZone } from "@/components/image-paste-zone";
 import { type OcrResult } from "@/lib/ocr";
 import { type FishEntry } from "@/lib/types";
 import { MUTATIONS, FISH_SPECIES, getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, RACES, ARTIFACTS, DECORATION_LEVELS } from "@/lib/fish-config";
-import { calculateBaseRoePerHour } from "@/lib/fish-utils";
+import { calculateBaseRoePerHour, computeEntryValue } from "@/lib/fish-utils";
 import { useSettings } from "@/components/settings-context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -171,10 +171,15 @@ export function FishLogTab({
     }
   };
 
-  const rankMap = React.useMemo(() => {
-    const sorted = [...entries].sort((a, b) => b.value - a.value);
-    return new Map(sorted.map((e, i) => [e.id, i + 1]));
+  // Dynamically compute sell value for each entry
+  const valueMap = React.useMemo(() => {
+    return new Map(entries.map((e) => [e.id, computeEntryValue(e)]));
   }, [entries]);
+
+  const rankMap = React.useMemo(() => {
+    const sorted = [...entries].sort((a, b) => (valueMap.get(b.id) ?? 0) - (valueMap.get(a.id) ?? 0));
+    return new Map(sorted.map((e, i) => [e.id, i + 1]));
+  }, [entries, valueMap]);
 
   // Compute roe $/hr for each entry (boosted by race/artifact cash + decoration speed)
   const roeMap = React.useMemo(() => {
@@ -183,14 +188,14 @@ export function FishLogTab({
       const fish = FISH_SPECIES.find((f) => f.name === entry.fishName.replace(/ \((Meat|Head)\)$/, ""));
       if (fish && fish.pondable !== false) {
         const hasMutation = entry.mutation !== "None";
-        const base = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
+        const base = calculateBaseRoePerHour(valueMap.get(entry.id) ?? 0, hasMutation, fish.rarity);
         map.set(entry.id, Math.round(base * boostMultiplier));
       } else {
         map.set(entry.id, 0);
       }
     }
     return map;
-  }, [entries, boostMultiplier]);
+  }, [entries, valueMap, boostMultiplier]);
 
   const displayEntries = React.useMemo(() => {
     const mul = sortDir === "asc" ? 1 : -1;
@@ -211,7 +216,7 @@ export function FishLogTab({
               (mutationMultiplierMap.get(b.mutation) ?? 1))
           );
         case "value":
-          return mul * (a.value - b.value);
+          return mul * ((valueMap.get(a.id) ?? 0) - (valueMap.get(b.id) ?? 0));
         case "roePerHour":
           return mul * ((roeMap.get(a.id) ?? 0) - (roeMap.get(b.id) ?? 0));
         case "createdAt":
@@ -224,7 +229,7 @@ export function FishLogTab({
           return 0;
       }
     });
-  }, [entries, sortKey, sortDir, rankMap]);
+  }, [entries, sortKey, sortDir, rankMap, valueMap]);
 
   const handleOcrResult = React.useCallback((result: OcrResult) => {
     const baseName = result.fishName ?? undefined;
@@ -257,7 +262,6 @@ export function FishLogTab({
       weight: formData.weight,
       stars: formData.stars,
       mutation: formData.mutation,
-      value: formData.value,
     };
 
     if (editingEntry) {
@@ -270,7 +274,7 @@ export function FishLogTab({
     } else {
       const newEntry = await onAdd(data);
       const allSorted = [...entries, newEntry].sort(
-        (a, b) => b.value - a.value
+        (a, b) => computeEntryValue(b) - computeEntryValue(a)
       );
       const pondFish = allSorted.slice(0, MAX_POND);
 
@@ -325,8 +329,8 @@ export function FishLogTab({
   };
 
   const allValues = React.useMemo(
-    () => entries.map((e) => Math.round(e.value * (cashBonus + 1))),
-    [entries, cashBonus]
+    () => entries.map((e) => Math.round((valueMap.get(e.id) ?? 0) * (cashBonus + 1))),
+    [entries, valueMap, cashBonus]
   );
 
   const sortProps = {
@@ -386,8 +390,8 @@ export function FishLogTab({
                     <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
                       {entry.mutation}
                     </TableCell>
-                    <TableCell className="text-right font-medium" style={{ color: getValueColor(Math.round(entry.value * (cashBonus + 1)), allValues) }}>
-                      ${Math.round(entry.value * (cashBonus + 1)).toLocaleString()}
+                    <TableCell className="text-right font-medium" style={{ color: getValueColor(Math.round((valueMap.get(entry.id) ?? 0) * (cashBonus + 1)), allValues) }}>
+                      ${Math.round((valueMap.get(entry.id) ?? 0) * (cashBonus + 1)).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right font-medium" style={{ color: getValueColor(roeMap.get(entry.id) ?? 0, [...roeMap.values()]) }}>
                       ${(roeMap.get(entry.id) ?? 0).toLocaleString()}/hr

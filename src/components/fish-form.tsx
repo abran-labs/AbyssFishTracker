@@ -38,6 +38,7 @@ export interface FishFormData {
   weight: number;
   stars: number;
   mutation: string;
+  /** Rounded sell value (for display in the form preview) */
   value: number;
   rawValue: number;
 }

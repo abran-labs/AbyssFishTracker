@@ -1,5 +1,5 @@
 import { FishSpecies, GlobalSettings } from "./types";
-import { MUTATIONS, STAR_LEVELS, CYCLE_TIMES, ARTIFACTS, RACES, DECORATION_LEVELS } from "./fish-config";
+import { FISH_SPECIES, MUTATIONS, STAR_LEVELS, CYCLE_TIMES, ARTIFACTS, RACES, DECORATION_LEVELS } from "./fish-config";
 
 export function calculateValue(
   weight: number,
@@ -11,6 +11,41 @@ export function calculateValue(
   const baseWeight = Math.round(weight / sizeMultiplier * 10) / 10;
   const correctedWeight = baseWeight * sizeMultiplier;
   return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
+}
+
+/**
+ * Dynamically compute the sell value for a fish log entry
+ * from its stored fields (fishName, weight, stars, mutation).
+ */
+export function computeEntryValue(entry: {
+  fishName: string;
+  weight: number;
+  stars: number;
+  mutation: string;
+}): number {
+  const baseName = entry.fishName.replace(/ \((Meat|Head)\)$/, "");
+  const fish = FISH_SPECIES.find((f) => f.name === baseName);
+  if (!fish) return 0;
+
+  const isMiniBoss = fish.pondable === false;
+  const isHead = entry.fishName.endsWith(" (Head)");
+  const dropMultiplier = isMiniBoss && isHead ? 2 : 1;
+
+  const starMultiplier = isMiniBoss
+    ? 1.0
+    : (STAR_LEVELS.find((s) => s.value === entry.stars)?.multiplier ?? 1.0);
+
+  const mut = MUTATIONS.find((m) => m.name === entry.mutation);
+  const mutationMultiplier = mut?.multiplier ?? 1.0;
+  const sizeMultiplier = mut?.sizeMultiplier ?? 1.0;
+
+  return calculateValue(
+    entry.weight,
+    fish.baseValue * dropMultiplier,
+    starMultiplier,
+    mutationMultiplier,
+    sizeMultiplier,
+  );
 }
 
 export function calculateOptimization(

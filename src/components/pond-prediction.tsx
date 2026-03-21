@@ -4,7 +4,7 @@ import * as React from "react";
 import { useSettings } from "@/components/settings-context";
 import { type FishEntry, type FishArea } from "@/lib/types";
 import { FISH_SPECIES, FISH_FEED, ROE_STORAGE_LEVELS, DECORATION_LEVELS, RACES, ARTIFACTS, CYCLE_TIMES, MUTATIONS, POND_SIZES } from "@/lib/fish-config";
-import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
+import { calculateBaseRoePerHour, calculateBoostedRoePerHour, computeEntryValue } from "@/lib/fish-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Select,
@@ -196,7 +196,7 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
             const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
             if (!fish) continue;
             const hasMutation = entry.mutation !== "None";
-            const baseRoe = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
+            const baseRoe = calculateBaseRoePerHour(computeEntryValue(entry), hasMutation, fish.rarity);
             total += calculateBoostedRoePerHour(baseRoe, globalSettings, settings.decorationLevel, selectedFeed.speedBonus, isOffline);
         }
         return total;
@@ -249,7 +249,7 @@ export function PondPrediction({ pondFish }: PondPredictionProps) {
             const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
             if (!fish) continue;
             const hasMutation = entry.mutation !== "None";
-            const baseRoe = calculateBaseRoePerHour(entry.value, hasMutation, fish.rarity);
+            const baseRoe = calculateBaseRoePerHour(computeEntryValue(entry), hasMutation, fish.rarity);
             total += calculateBoostedRoePerHour(baseRoe, globalSettings, settings.decorationLevel, bestFeedSpeedBonus, false);
         }
         return total;

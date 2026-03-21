@@ -19,7 +19,7 @@ import {
   ARTIFACTS,
   POND_SIZES,
 } from "@/lib/fish-config";
-import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
+import { calculateBaseRoePerHour, calculateBoostedRoePerHour, computeEntryValue } from "@/lib/fish-utils";
 import { useSettings } from "@/components/settings-context";
 import { PondPrediction } from "@/components/pond-prediction";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,8 +79,8 @@ function computeSwaps(
   }
 
   // Sort: removes by value ascending (weakest first), adds by value descending (strongest first)
-  toRemove.sort((a, b) => a.value - b.value);
-  toAdd.sort((a, b) => b.value - a.value);
+  toRemove.sort((a, b) => computeEntryValue(a) - computeEntryValue(b));
+  toAdd.sort((a, b) => computeEntryValue(b) - computeEntryValue(a));
 
   const swaps: SwapEntry[] = [];
   const maxPairs = Math.max(toRemove.length, toAdd.length);
@@ -124,8 +124,8 @@ export function FishPondTab({
     return [...entries].sort((a, b) => {
       const aFish = FISH_SPECIES.find((f) => f.name === a.fishName);
       const bFish = FISH_SPECIES.find((f) => f.name === b.fishName);
-      const aRoe = aFish ? calculateBaseRoePerHour(a.value, a.mutation !== "None", aFish.rarity) : 0;
-      const bRoe = bFish ? calculateBaseRoePerHour(b.value, b.mutation !== "None", bFish.rarity) : 0;
+      const aRoe = aFish ? calculateBaseRoePerHour(computeEntryValue(a), a.mutation !== "None", aFish.rarity) : 0;
+      const bRoe = bFish ? calculateBaseRoePerHour(computeEntryValue(b), b.mutation !== "None", bFish.rarity) : 0;
       return bRoe - aRoe;
     });
   }, [entries]);
@@ -172,7 +172,7 @@ export function FishPondTab({
     };
   }, [settings.race, settings.artifact1, settings.artifact2, settings.artifact3, settings.decorationLevel]);
 
-  const allValues = React.useMemo(() => entries.map((e) => Math.round(e.value * (cashBonus + 1))), [entries, cashBonus]);
+  const allValues = React.useMemo(() => entries.map((e) => Math.round(computeEntryValue(e) * (cashBonus + 1))), [entries, cashBonus]);
 
   const valueLabel = cashBonus > 0.00005
     ? `Value (+${Number((cashBonus * 100).toFixed(4))}%)`
@@ -185,7 +185,7 @@ export function FishPondTab({
   const getDisplayRoe = React.useCallback((entry: FishEntry) => {
     const fish = FISH_SPECIES.find((f) => f.name === entry.fishName);
     if (!fish) return 0;
-    const base = calculateBaseRoePerHour(entry.value, entry.mutation !== "None", fish.rarity);
+    const base = calculateBaseRoePerHour(computeEntryValue(entry), entry.mutation !== "None", fish.rarity);
     return Math.round(calculateBoostedRoePerHour(base, globalSettings, settings.decorationLevel, 0, false));
   }, [globalSettings, settings.decorationLevel]);
 
@@ -298,13 +298,14 @@ export function FishPondTab({
         <Card className="border-blue-500/50 bg-blue-500/5">
           <CardHeader className="pb-3">
             <CardTitle className="text-base text-blue-400">
-              Pond Sorting Update!
+              Dynamic Value Update!
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm text-muted-foreground">
             <p>
-              Your pond is now sorted by <strong>Roe $/hr</strong> instead of fish value.
-              This is a more accurate metric for maximizing your passive income.
+              Fish log values are now <strong>dynamically calculated</strong> instead of stored once when added.
+              This means formula changes are automatically applied to all your fish.
+              Some values may have changed, which could result in new swap recommendations.
             </p>
             <Button size="sm" variant="outline" onClick={() => settings.updateSettings({ pondSortNoticeDismissed: true })}>
               Got it!
@@ -346,9 +347,9 @@ export function FishPondTab({
                           <span className="font-normal shrink-0" style={MUTATION_COLORS[wantFish.mutation] ? { color: MUTATION_COLORS[wantFish.mutation] } : undefined}>{wantFish.mutation}</span><span className="text-muted-foreground font-normal shrink-0"> | </span>
                           <span
                             className="text-xs font-semibold shrink-0"
-                            style={{ color: getValueColor(Math.round(wantFish.value * (cashBonus + 1)), allValues) }}
+                            style={{ color: getValueColor(Math.round(computeEntryValue(wantFish) * (cashBonus + 1)), allValues) }}
                           >
-                            ${Math.round(wantFish.value * (cashBonus + 1)).toLocaleString()}
+                            ${Math.round(computeEntryValue(wantFish) * (cashBonus + 1)).toLocaleString()}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
@@ -376,9 +377,9 @@ export function FishPondTab({
                           <span className="font-normal shrink-0" style={MUTATION_COLORS[haveFish.mutation] ? { color: MUTATION_COLORS[haveFish.mutation] } : undefined}>{haveFish.mutation}</span><span className="text-muted-foreground font-normal shrink-0"> | </span>
                           <span
                             className="text-xs font-semibold shrink-0"
-                            style={{ color: getValueColor(Math.round(haveFish.value * (cashBonus + 1)), allValues) }}
+                            style={{ color: getValueColor(Math.round(computeEntryValue(haveFish) * (cashBonus + 1)), allValues) }}
                           >
-                            ${Math.round(haveFish.value * (cashBonus + 1)).toLocaleString()}
+                            ${Math.round(computeEntryValue(haveFish) * (cashBonus + 1)).toLocaleString()}
                           </span>
                         </div>
                         <div className="text-xs text-muted-foreground mt-0.5">
@@ -401,7 +402,7 @@ export function FishPondTab({
                     {wantFish.stars > 0 && <><span style={{ color: STAR_COLOR }}>{wantFish.stars}★</span><span className="text-muted-foreground"> | </span></>}
                     <span style={MUTATION_COLORS[wantFish.mutation] ? { color: MUTATION_COLORS[wantFish.mutation] } : undefined}>{wantFish.mutation}</span><span className="text-muted-foreground"> | </span>
                     <span className="text-muted-foreground">
-                      ${wantFish.value.toLocaleString()}
+                      ${computeEntryValue(wantFish).toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">
                       (${getDisplayRoe(wantFish).toLocaleString()}/hr)
@@ -421,7 +422,7 @@ export function FishPondTab({
                     {haveFish.stars > 0 && <><span style={{ color: STAR_COLOR }}>{haveFish.stars}★</span><span className="text-muted-foreground"> | </span></>}
                     <span style={MUTATION_COLORS[haveFish.mutation] ? { color: MUTATION_COLORS[haveFish.mutation] } : undefined}>{haveFish.mutation}</span><span className="text-muted-foreground"> | </span>
                     <span className="text-muted-foreground">
-                      ${haveFish.value.toLocaleString()}
+                      ${computeEntryValue(haveFish).toLocaleString()}
                     </span>
                     <span className="text-muted-foreground">
                       (${getDisplayRoe(haveFish).toLocaleString()}/hr)
@@ -554,9 +555,9 @@ export function FishPondTab({
                       </TableCell>
                       <TableCell
                         className="text-right font-medium"
-                        style={{ color: getValueColor(Math.round(entry.value * (cashBonus + 1)), allValues) }}
+                        style={{ color: getValueColor(Math.round(computeEntryValue(entry) * (cashBonus + 1)), allValues) }}
                       >
-                        ${Math.round(entry.value * (cashBonus + 1)).toLocaleString()}
+                        ${Math.round(computeEntryValue(entry) * (cashBonus + 1)).toLocaleString()}
                       </TableCell>
                       <TableCell className="text-right font-medium" style={{ color: getValueColor(getDisplayRoe(entry), allRoeValues) }}>
                         ${getDisplayRoe(entry).toLocaleString()}/hr
