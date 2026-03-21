@@ -184,7 +184,7 @@ export default function Home() {
             </div>
 
             <TabsContent value="calculator">
-              <CalculatorTab />
+              <CalculatorTab onAdd={user ? handleAddEntry : undefined} />
               <p className="mt-6 text-sm text-muted-foreground text-center italic">
                 🍄 <span style={{ color: "rgb(189, 135, 204)" }}>Gloomspore Valley</span>!
               </p>

@@ -10,7 +10,9 @@ import { useSettings } from "@/components/settings-context";
 import { FISH_SPECIES, CYCLE_TIMES, RACES, ARTIFACTS, DECORATION_LEVELS } from "@/lib/fish-config";
 import { calculateBaseRoePerHour, calculateBoostedRoePerHour } from "@/lib/fish-utils";
 import { type GlobalSettings } from "@/lib/types";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, BookmarkPlus } from "lucide-react";
+import { useAuth } from "@/components/auth-context";
+import { type FishEntry } from "@/lib/types";
 
 const DISCORD_SEP = "> ---------------------------------------->";
 
@@ -30,7 +32,15 @@ function buildDiscordText(formData: FishFormData, baseRoe: number | null): strin
   return lines.join("\n");
 }
 
-export function CalculatorTab() {
+function fishFingerprint(formData: FishFormData): string {
+  return `${formData.fishName}|${formData.weight}|${formData.stars}|${formData.mutation}|${formData.value}`;
+}
+
+interface CalculatorTabProps {
+  onAdd?: (data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">) => Promise<FishEntry>;
+}
+
+export function CalculatorTab({ onAdd }: CalculatorTabProps) {
   const [ocrData, setOcrData] = React.useState<{
     fishName?: string;
     weight?: number;
@@ -39,7 +49,9 @@ export function CalculatorTab() {
   } | undefined>(undefined);
   const [formKey, setFormKey] = React.useState(0);
   const settings = useSettings();
+  const { user } = useAuth();
   const [copied, setCopied] = React.useState(false);
+  const [savedFingerprint, setSavedFingerprint] = React.useState<string | null>(null);
 
   const handleOcrResult = React.useCallback((result: OcrResult) => {
     const baseName = result.fishName ?? undefined;
@@ -71,18 +83,45 @@ export function CalculatorTab() {
             const hasMutation = formData.mutation !== "None";
             const baseRoe = isPondable && fish ? calculateBaseRoePerHour(formData.value, hasMutation, fish.rarity) : null;
             return (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(buildDiscordText(formData, baseRoe));
-                  setCopied(true);
-                  setTimeout(() => setCopied(false), 2000);
-                }}
-              >
-                {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
-                {copied ? "Copied!" : "Copy for Discord"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    navigator.clipboard.writeText(buildDiscordText(formData, baseRoe));
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? <Check className="w-4 h-4 mr-1" /> : <Copy className="w-4 h-4 mr-1" />}
+                  {copied ? "Copied!" : "Copy for Discord"}
+                </Button>
+                {user && onAdd && (() => {
+                  const fp = fishFingerprint(formData);
+                  const isSaved = savedFingerprint === fp;
+                  return (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className={isSaved ? "border-green-500 text-green-600 hover:text-green-600 hover:border-green-500" : ""}
+                      disabled={isSaved}
+                      onClick={async () => {
+                        await onAdd({
+                          fishName: formData.fishName,
+                          weight: formData.weight,
+                          stars: formData.stars,
+                          mutation: formData.mutation,
+                          value: formData.value,
+                        });
+                        setSavedFingerprint(fp);
+                      }}
+                    >
+                      {isSaved ? <Check className="w-4 h-4 mr-1" /> : <BookmarkPlus className="w-4 h-4 mr-1" />}
+                      {isSaved ? "Saved!" : "Save to Fish Log"}
+                    </Button>
+                  );
+                })()}
+              </>
             );
           }}
         />
