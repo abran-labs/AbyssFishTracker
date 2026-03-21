@@ -1,7 +1,8 @@
 "use client";
 
 import { Footer } from "@/components/ui/footer";
-import { Github, Youtube } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Github, Youtube, Heart } from "lucide-react";
 import Image from "next/image";
 
 const XIcon = ({ className }: { className?: string }) => (
@@ -36,6 +37,19 @@ export function FooterSection() {
             ]}
             mainLinks={[]}
             legalLinks={[]}
+            supportContent={
+                <>
+                    <p className="text-sm text-muted-foreground mb-2">
+                        If you find this useful, consider supporting the project.
+                    </p>
+                    <Button asChild className="bg-pink-500/10 text-pink-500 hover:bg-pink-500/20 border border-pink-500/30">
+                        <a href="https://github.com/sponsors/abran-labs" target="_blank" rel="noopener noreferrer">
+                            <Heart className="h-4 w-4 mr-2 fill-none stroke-pink-500" />
+                            Support
+                        </a>
+                    </Button>
+                </>
+            }
             copyright={{
                 text: "© 2026 Abran Labs",
                 license: "All rights reserved",

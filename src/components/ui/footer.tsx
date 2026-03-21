@@ -22,6 +22,7 @@ interface FooterProps {
     text: string
     license?: string
   }
+  supportContent?: React.ReactNode
 }
 
 export function Footer({
@@ -31,6 +32,7 @@ export function Footer({
   mainLinks,
   legalLinks,
   copyright,
+  supportContent,
 }: FooterProps) {
   return (
     <footer className="pb-6 pt-16 lg:pb-8 lg:pt-24">
@@ -99,6 +101,11 @@ export function Footer({
             <div>{copyright.text}</div>
             {copyright.license && <div>{copyright.license}</div>}
           </div>
+          {supportContent && (
+            <div className="mt-6 lg:mt-0 lg:row-[1/3] lg:col-[1/11] flex flex-col items-center text-center justify-center">
+              {supportContent}
+            </div>
+          )}
         </div>
       </div>
     </footer>

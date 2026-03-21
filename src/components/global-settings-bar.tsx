@@ -115,35 +115,35 @@ export function GlobalSettingsBar() {
                 </Select>
             </div>
 
-            <span className="text-muted-foreground shrink-0 text-sm font-medium">×</span>
+            <span className="text-muted-foreground shrink-0 text-sm">×</span>
 
             {/* Artifacts */}
             <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-muted-foreground font-medium shrink-0">Artifacts</span>
-                <span className="text-muted-foreground shrink-0 text-sm font-medium">(</span>
+                <span className="text-muted-foreground shrink-0 text-sm">(</span>
                 <ArtifactSlot
                     value={artifact1}
                     onChange={(v) => updateSettings({ artifact1: v })}
                     kingsFortuneUsed={kingsFortuneUsed}
                 />
-                <span className="text-muted-foreground shrink-0 text-sm font-medium">+</span>
+                <span className="text-muted-foreground shrink-0 text-sm">+</span>
                 <ArtifactSlot
                     value={artifact2}
                     onChange={(v) => updateSettings({ artifact2: v })}
                     kingsFortuneUsed={kingsFortuneUsed}
                 />
-                <span className="text-muted-foreground shrink-0 text-sm font-medium">+</span>
+                <span className="text-muted-foreground shrink-0 text-sm">+</span>
                 <ArtifactSlot
                     value={artifact3}
                     onChange={(v) => updateSettings({ artifact3: v })}
                     kingsFortuneUsed={kingsFortuneUsed}
                 />
-                <span className="text-muted-foreground shrink-0 text-sm font-medium">)</span>
+                <span className="text-muted-foreground shrink-0 text-sm">)</span>
             </div>
 
             {totalBonus > 0 && (
                 <>
-                    <span className="text-muted-foreground shrink-0 text-sm font-medium">=</span>
+                    <span className="text-muted-foreground shrink-0 text-sm">=</span>
                     <span className="font-semibold text-amber-400 tabular-nums shrink-0">
                         +{Number((totalBonus * 100).toFixed(4))}%
                     </span>
