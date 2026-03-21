@@ -8,6 +8,7 @@ import { CalculatorTab } from "@/components/calculator-tab";
 import { FishLogTab } from "@/components/fish-log-tab";
 import { FishPondTab } from "@/components/fish-pond-tab";
 import { FeedbackTab } from "@/components/feedback-tab";
+import { GuideTab } from "@/components/guide-tab";
 import { type FishEntry } from "@/lib/types";
 import {
   getServerEntries,
@@ -29,7 +30,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FooterSection } from "@/components/footer-section";
 
 const ACTIVE_TAB_KEY = "activeTab";
-const VALID_TABS = ["calculator", "log", "pond", "feedback"];
+const VALID_TABS = ["calculator", "log", "pond", "guide", "feedback"];
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -174,11 +175,12 @@ export default function Home() {
             <div className="flex flex-col gap-2 mb-3">
               <TabsList className="self-start">
                 <TabsTrigger value="calculator">Calculator</TabsTrigger>
+                <TabsTrigger value="guide">Guide</TabsTrigger>
                 <TabsTrigger value="log">Fish Log</TabsTrigger>
                 <TabsTrigger value="pond">Fish Pond</TabsTrigger>
                 <TabsTrigger value="feedback">Feedback</TabsTrigger>
               </TabsList>
-              <GlobalSettingsBar />
+              <GlobalSettingsBar activeTab={activeTab} />
             </div>
 
             <TabsContent value="calculator">
@@ -186,6 +188,10 @@ export default function Home() {
               <p className="mt-6 text-sm text-muted-foreground text-center italic">
                 🍄 <span style={{ color: "rgb(189, 135, 204)" }}>Gloomspore Valley</span>!
               </p>
+            </TabsContent>
+
+            <TabsContent value="guide">
+              <GuideTab />
             </TabsContent>
 
             <TabsContent value="log">

@@ -10,7 +10,7 @@ export function calculateValue(
 ): number {
   const baseWeight = Math.round(weight / sizeMultiplier * 10) / 10;
   const correctedWeight = baseWeight * sizeMultiplier;
-  return correctedWeight * baseValue * starMultiplier * mutationMultiplier;
+  return Math.round(correctedWeight * baseValue * starMultiplier * mutationMultiplier);
 }
 
 export function calculateOptimization(
@@ -56,7 +56,7 @@ export function calculateBaseRoePerHour(
 ): number {
   const cycleTime = CYCLE_TIMES[rarity] ?? 600;
   const mutationFactor = hasMutation ? 0.5 : 1.0;
-  return Math.ceil(fishValue * 0.02 * mutationFactor) * (3600 / cycleTime);
+  return Math.round(Math.ceil(fishValue * 0.02 * mutationFactor) * (3600 / cycleTime));
 }
 
 /**
@@ -89,5 +89,5 @@ export function calculateBoostedRoePerHour(
 
   const offlineMultiplier = isOffline ? 0.5 : 1.0;
 
-  return baseRoePerHour * cashMultiplier * speedMultiplier * offlineMultiplier;
+  return Math.round(baseRoePerHour * cashMultiplier * speedMultiplier * offlineMultiplier);
 }

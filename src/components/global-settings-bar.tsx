@@ -77,7 +77,8 @@ function ArtifactSlot({
     );
 }
 
-export function GlobalSettingsBar() {
+export function GlobalSettingsBar({ activeTab }: { activeTab?: string }) {
+    const disabled = activeTab === "guide";
     const { race, artifact1, artifact2, artifact3, updateSettings } = useSettings();
 
     const totalBonus = React.useMemo(() => {
@@ -97,7 +98,7 @@ export function GlobalSettingsBar() {
     const raceColor = RACES.find(r => r.name === race)?.color;
 
     return (
-        <div className="flex items-center gap-3 flex-wrap text-xs">
+        <div className={`flex items-center gap-3 flex-wrap text-xs${disabled ? " line-through opacity-50 pointer-events-none" : ""}`}>
             {/* Race */}
             <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground font-medium shrink-0">Race</span>
