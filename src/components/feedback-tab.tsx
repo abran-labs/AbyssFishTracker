@@ -173,7 +173,7 @@ function CommentItem({
 
   const isOwn = !!currentUserEmail && comment.authorEmail === currentUserEmail;
   const isOP = !!postAuthorEmail && comment.authorEmail === postAuthorEmail;
-  const canEdit = (isOwn || admin) && !comment.deleted;
+  const canEdit = (isOwn && !isCompleted || admin) && !comment.deleted;
   const canDelete = (isOwn || admin) && !comment.deleted;
   const canReply = loggedIn && !isCompleted && !comment.deleted;
   const canBan = admin && !!comment.authorEmail && !comment.isAuthorAdmin;
@@ -382,7 +382,7 @@ function PostCard({
 
   const isCompleted = post.status === "completed";
   const isOwn = !!currentUserEmail && post.authorEmail === currentUserEmail;
-  const canEditPost = isOwn || admin;
+  const canEditPost = (isOwn && !isCompleted) || admin;
   const canDeletePost = isOwn || admin;
   const canBanPost = admin && !!post.authorEmail && !post.isAuthorAdmin;
   const totalComments = countComments(post.comments);

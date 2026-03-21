@@ -227,6 +227,7 @@ export async function editFeedbackPost(
   if (!post) throw new Error("Post not found");
   const admin = session.email === ADMIN_EMAIL;
   if (!admin && post.authorId !== session.userId) throw new Error("Unauthorized");
+  if (!admin && post.status === "completed") throw new Error("Post is locked");
   await prisma.feedbackPost.update({
     where: { id: postId },
     data: { title: data.title.trim(), description: data.description.trim() },
@@ -235,10 +236,14 @@ export async function editFeedbackPost(
 
 export async function editFeedbackComment(commentId: string, content: string): Promise<void> {
   const session = await requireUser();
-  const comment = await prisma.feedbackComment.findUnique({ where: { id: commentId } });
+  const comment = await prisma.feedbackComment.findUnique({
+    where: { id: commentId },
+    include: { post: { select: { status: true } } },
+  });
   if (!comment) throw new Error("Comment not found");
   const admin = session.email === ADMIN_EMAIL;
   if (!admin && comment.authorId !== session.userId) throw new Error("Unauthorized");
+  if (!admin && comment.post.status === "completed") throw new Error("Post is locked");
   await prisma.feedbackComment.update({
     where: { id: commentId },
     data: { content: content.trim() },
