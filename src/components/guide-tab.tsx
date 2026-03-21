@@ -163,6 +163,26 @@ function computeMutationBreakdowns(): Record<string, MutationBreakdown[]> {
   return result;
 }
 
+// ── Developer-controlled notice ──
+// Set GUIDE_NOTICE to null to hide, or a JSX element to show.
+const GUIDE_NOTICE: React.ReactNode = (
+  <>
+    While{" "}
+    <span style={{ color: RARITY_COLORS["Mythical"] }}>Angel</span>{" "}
+    is ranked #1, it is incredibly difficult to catch a 3-star{" "}
+    <span style={{ color: RARITY_COLORS["Mythical"] }}>Angel</span>.
+    {" "}In most cases,{" "}
+    <span style={{ color: RARITY_COLORS["Epic"] }}>Basking Shark</span>{" "}
+    is the better option.
+    <br />
+    {" "}Additionally, while{" "}
+    <span style={{ color: RARITY_COLORS["Epic"] }}>Basking Shark</span>{" "}
+    out-earns{" "}
+    <span style={{ color: RARITY_COLORS["Epic"] }}>Alien</span>,{" "}
+    it does fill your storage more than twice as fast.
+  </>
+);
+
 const RANKINGS = computeRankings();
 const MUTATION_BREAKDOWNS = computeMutationBreakdowns();
 
@@ -367,6 +387,20 @@ export function GuideTab() {
 
   return (
     <div className="space-y-4">
+      {/* Developer notice */}
+      {GUIDE_NOTICE && (
+        <div
+          className="rounded-lg border px-4 py-3 text-sm"
+          style={{
+            borderColor: "rgba(85, 170, 255, 0.4)",
+            backgroundColor: "rgba(85, 170, 255, 0.07)",
+            color: "rgb(220, 220, 220)",
+          }}
+        >
+          <span className="font-semibold mr-1.5" style={{ color: "rgb(85, 170, 255)" }}>Notice:</span>
+          {GUIDE_NOTICE}
+        </div>
+      )}
       {/* Top Picks Summary */}
       <Card>
         <CardHeader className="pb-3">
