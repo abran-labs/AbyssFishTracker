@@ -16,6 +16,10 @@ import {
   IconCheck,
   IconSettingsFilled,
   IconGavel,
+  IconPin,
+  IconPinnedFilled,
+  IconLock,
+  IconLockOpen,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +34,8 @@ import {
   deleteFeedbackComment,
   updateFeedbackStatus,
   banUser,
+  togglePinFeedbackPost,
+  toggleLockFeedbackPost,
   checkIsAdmin,
   getCurrentUserEmail,
   type FeedbackPostData,
@@ -147,6 +153,7 @@ function CommentItem({
   loggedIn,
   currentUserEmail,
   isCompleted,
+  isLocked,
   onDelete,
   onEdit,
   onReply,
@@ -159,6 +166,7 @@ function CommentItem({
   loggedIn: boolean;
   currentUserEmail: string | null;
   isCompleted: boolean;
+  isLocked: boolean;
   onDelete: (postId: string, commentId: string) => void;
   onEdit: (postId: string, commentId: string, content: string) => void;
   onReply: (postId: string, parentCommentId: string, content: string) => void;
@@ -173,9 +181,9 @@ function CommentItem({
 
   const isOwn = !!currentUserEmail && comment.authorEmail === currentUserEmail;
   const isOP = !!postAuthorEmail && comment.authorEmail === postAuthorEmail;
-  const canEdit = (isOwn && !isCompleted || admin) && !comment.deleted;
+  const canEdit = (isOwn && !isCompleted && !isLocked || admin) && !comment.deleted;
   const canDelete = (isOwn || admin) && !comment.deleted;
-  const canReply = loggedIn && !isCompleted && !comment.deleted;
+  const canReply = loggedIn && !isCompleted && (!isLocked || admin) && !comment.deleted;
   const canBan = admin && !!comment.authorEmail && !comment.isAuthorAdmin;
 
   const handleSaveEdit = async () => {
@@ -332,6 +340,7 @@ function CommentItem({
               loggedIn={loggedIn}
               currentUserEmail={currentUserEmail}
               isCompleted={isCompleted}
+              isLocked={isLocked}
               onDelete={onDelete}
               onEdit={onEdit}
               onReply={onReply}
@@ -360,6 +369,8 @@ function PostCard({
   onEditComment,
   onAddReply,
   onBan,
+  onTogglePin,
+  onToggleLock,
 }: {
   post: FeedbackPostData;
   admin: boolean;
@@ -374,6 +385,8 @@ function PostCard({
   onEditComment: (postId: string, commentId: string, content: string) => void;
   onAddReply: (postId: string, parentCommentId: string, content: string) => void;
   onBan: (authorEmail: string) => void;
+  onTogglePin: (id: string) => void;
+  onToggleLock: (id: string) => void;
 }) {
   const [expanded, setExpanded] = React.useState(false);
   const [commentText, setCommentText] = React.useState("");
@@ -381,8 +394,9 @@ function PostCard({
   const [showEdit, setShowEdit] = React.useState(false);
 
   const isCompleted = post.status === "completed";
+  const isLocked = post.locked;
   const isOwn = !!currentUserEmail && post.authorEmail === currentUserEmail;
-  const canEditPost = (isOwn && !isCompleted) || admin;
+  const canEditPost = (isOwn && !isCompleted && !isLocked) || admin;
   const canDeletePost = isOwn || admin;
   const canBanPost = admin && !!post.authorEmail && !post.isAuthorAdmin;
   const totalComments = countComments(post.comments);
@@ -400,9 +414,11 @@ function PostCard({
       <div
         className={`border rounded-lg transition-colors ${isCompleted
           ? "border-green-800/50 bg-green-950/20"
-          : isOwn
-            ? "border-blue-500/20 bg-blue-950/10"
-            : "border-border/60"
+          : isLocked
+            ? "border-red-800/30 bg-red-950/10"
+            : isOwn
+              ? "border-blue-500/20 bg-blue-950/10"
+              : "border-border/60"
           }`}
       >
         <div className="flex gap-3 p-4">
@@ -428,6 +444,18 @@ function PostCard({
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
+                {post.pinned && (
+                  <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded font-medium bg-amber-900/60 text-amber-300 shrink-0">
+                    <IconPinnedFilled className="h-3 w-3" />
+                    Pinned
+                  </span>
+                )}
+                {post.locked && (
+                  <span className="inline-flex items-center gap-0.5 text-xs px-1.5 py-0.5 rounded font-medium bg-red-900/60 text-red-300 shrink-0">
+                    <IconLock className="h-3 w-3" />
+                    Locked
+                  </span>
+                )}
                 <h3 className="font-medium text-sm">{post.title}</h3>
                 {post.isAuthorAdmin && <DevBadge />}
                 {post.status !== "open" && (
@@ -464,6 +492,24 @@ function PostCard({
                     title="Delete post"
                   >
                     <IconTrash className="h-4 w-4" />
+                  </button>
+                )}
+                {admin && (
+                  <button
+                    onClick={() => onTogglePin(post.id)}
+                    className={`p-1 rounded transition-colors ${post.pinned ? "text-amber-400 hover:text-amber-300" : "text-muted-foreground/50 hover:text-amber-400"}`}
+                    title={post.pinned ? "Unpin post" : "Pin post"}
+                  >
+                    {post.pinned ? <IconPinnedFilled className="h-4 w-4" /> : <IconPin className="h-4 w-4" />}
+                  </button>
+                )}
+                {admin && (
+                  <button
+                    onClick={() => onToggleLock(post.id)}
+                    className={`p-1 rounded transition-colors ${post.locked ? "text-red-400 hover:text-red-300" : "text-muted-foreground/50 hover:text-red-400"}`}
+                    title={post.locked ? "Unlock post" : "Lock post"}
+                  >
+                    {post.locked ? <IconLock className="h-4 w-4" /> : <IconLockOpen className="h-4 w-4" />}
                   </button>
                 )}
                 {canBanPost && (
@@ -513,6 +559,7 @@ function PostCard({
                 loggedIn={loggedIn}
                 currentUserEmail={currentUserEmail}
                 isCompleted={isCompleted}
+                isLocked={isLocked}
                 onDelete={onDeleteComment}
                 onEdit={onEditComment}
                 onReply={onAddReply}
@@ -522,6 +569,8 @@ function PostCard({
 
             {isCompleted ? (
               <p className="text-xs text-muted-foreground/50">Comments are closed</p>
+            ) : isLocked && !admin ? (
+              <p className="text-xs text-muted-foreground/50">This post is locked</p>
             ) : loggedIn ? (
               <div className="flex gap-2 pt-1">
                 <input
@@ -829,6 +878,18 @@ export function FeedbackTab({ loggedIn, onLoginClick }: { loggedIn: boolean; onL
     );
   };
 
+  const handleTogglePin = async (postId: string) => {
+    const pinned = await togglePinFeedbackPost(postId);
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, pinned } : p)));
+    // Re-sort so pinned posts move to top
+    await loadPosts(subTab, true);
+  };
+
+  const handleToggleLock = async (postId: string) => {
+    const locked = await toggleLockFeedbackPost(postId);
+    setPosts((prev) => prev.map((p) => (p.id === postId ? { ...p, locked } : p)));
+  };
+
   const handleBan = async (authorEmail: string) => {
     if (!confirm(`Permanently ban ${authorEmail}?\n\nThis will delete all their posts and comments and block their account and IP.`)) return;
     await banUser(authorEmail);
@@ -906,6 +967,8 @@ export function FeedbackTab({ loggedIn, onLoginClick }: { loggedIn: boolean; onL
               onEditComment={handleEditComment}
               onAddReply={handleAddReply}
               onBan={handleBan}
+              onTogglePin={handleTogglePin}
+              onToggleLock={handleToggleLock}
             />
           ))}
         </div>

@@ -37,6 +37,8 @@ export type FeedbackPostData = {
   createdAt: string;
   authorEmail: string | null;
   isAuthorAdmin: boolean;
+  pinned: boolean;
+  locked: boolean;
   comments: FeedbackCommentData[];
   userHasVoted: boolean;
 };
@@ -112,7 +114,7 @@ export async function getFeedbackPosts(type: "suggestion" | "issue"): Promise<Fe
       comments: { orderBy: { createdAt: "asc" } },
       votes: session ? { where: { userId: session.userId } } : false,
     },
-    orderBy: [{ upvotes: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ pinned: "desc" }, { upvotes: "desc" }, { createdAt: "desc" }],
   });
 
   return rows.map((r) => ({
@@ -125,6 +127,8 @@ export async function getFeedbackPosts(type: "suggestion" | "issue"): Promise<Fe
     createdAt: r.createdAt.toISOString(),
     authorEmail: r.authorEmail,
     isAuthorAdmin: r.authorEmail === ADMIN_EMAIL,
+    pinned: r.pinned,
+    locked: r.locked,
     comments: buildCommentTree(r.comments, null),
     userHasVoted: session ? (r.votes as { id: string }[]).length > 0 : false,
   }));
@@ -160,6 +164,8 @@ export async function createFeedbackPost(data: {
     createdAt: row.createdAt.toISOString(),
     authorEmail: row.authorEmail,
     isAuthorAdmin: row.authorEmail === ADMIN_EMAIL,
+    pinned: false,
+    locked: false,
     comments: [],
     userHasVoted: true,
   };
@@ -195,6 +201,10 @@ export async function addFeedbackComment(
   parentId?: string
 ): Promise<FeedbackCommentData> {
   const session = await requireUser();
+  const admin = session.email === ADMIN_EMAIL;
+  const post = await prisma.feedbackPost.findUnique({ where: { id: postId } });
+  if (!post) throw new Error("Post not found");
+  if (!admin && post.locked) throw new Error("Post is locked");
 
   const row = await prisma.feedbackComment.create({
     data: {
@@ -227,7 +237,7 @@ export async function editFeedbackPost(
   if (!post) throw new Error("Post not found");
   const admin = session.email === ADMIN_EMAIL;
   if (!admin && post.authorId !== session.userId) throw new Error("Unauthorized");
-  if (!admin && post.status === "completed") throw new Error("Post is locked");
+  if (!admin && (post.status === "completed" || post.locked)) throw new Error("Post is locked");
   await prisma.feedbackPost.update({
     where: { id: postId },
     data: { title: data.title.trim(), description: data.description.trim() },
@@ -238,12 +248,12 @@ export async function editFeedbackComment(commentId: string, content: string): P
   const session = await requireUser();
   const comment = await prisma.feedbackComment.findUnique({
     where: { id: commentId },
-    include: { post: { select: { status: true } } },
+    include: { post: { select: { status: true, locked: true } } },
   });
   if (!comment) throw new Error("Comment not found");
   const admin = session.email === ADMIN_EMAIL;
   if (!admin && comment.authorId !== session.userId) throw new Error("Unauthorized");
-  if (!admin && comment.post.status === "completed") throw new Error("Post is locked");
+  if (!admin && (comment.post.status === "completed" || comment.post.locked)) throw new Error("Post is locked");
   await prisma.feedbackComment.update({
     where: { id: commentId },
     data: { content: content.trim() },
@@ -299,6 +309,28 @@ export async function updateFeedbackStatus(
     where: { id: postId },
     data: { status },
   });
+}
+
+export async function togglePinFeedbackPost(postId: string): Promise<boolean> {
+  if (!(await isAdmin())) throw new Error("Unauthorized");
+  const post = await prisma.feedbackPost.findUnique({ where: { id: postId } });
+  if (!post) throw new Error("Post not found");
+  const updated = await prisma.feedbackPost.update({
+    where: { id: postId },
+    data: { pinned: !post.pinned },
+  });
+  return updated.pinned;
+}
+
+export async function toggleLockFeedbackPost(postId: string): Promise<boolean> {
+  if (!(await isAdmin())) throw new Error("Unauthorized");
+  const post = await prisma.feedbackPost.findUnique({ where: { id: postId } });
+  if (!post) throw new Error("Post not found");
+  const updated = await prisma.feedbackPost.update({
+    where: { id: postId },
+    data: { locked: !post.locked },
+  });
+  return updated.locked;
 }
 
 export async function banUser(authorEmail: string): Promise<void> {

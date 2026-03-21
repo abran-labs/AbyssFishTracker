@@ -101,6 +101,8 @@ model FeedbackPost {
   updatedAt   DateTime @updatedAt
   authorId    String?
   authorEmail String?
+  pinned      Boolean  @default(false)
+  locked      Boolean  @default(false)
 
   comments    FeedbackComment[]
   votes       FeedbackUpvote[]
