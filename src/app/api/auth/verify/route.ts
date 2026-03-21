@@ -50,6 +50,20 @@ export async function POST(request: Request) {
       });
     }
 
+    if (user.banned) {
+      return NextResponse.json({ error: "This account is permanently banned." }, { status: 403 });
+    }
+
+    // Capture and store the client IP
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+      request.headers.get("x-real-ip") ||
+      null;
+
+    if (ip) {
+      await prisma.user.update({ where: { id: user.id }, data: { lastKnownIp: ip } });
+    }
+
     // Create session
     const token = await createSession({
       userId: user.id,

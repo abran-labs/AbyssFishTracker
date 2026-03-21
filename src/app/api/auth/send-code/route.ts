@@ -20,6 +20,15 @@ export async function POST(request: Request) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
+    // Block banned accounts from receiving a new code
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { banned: true },
+    });
+    if (existingUser?.banned) {
+      return NextResponse.json({ error: "This account is permanently banned." }, { status: 403 });
+    }
+
     // Generate 6-digit OTP
     const code = randomInt(100000, 999999).toString();
 
