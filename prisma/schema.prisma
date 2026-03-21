@@ -82,3 +82,42 @@ model GlobalStat {
   updatedAt DateTime @updatedAt
 }
 
+model FeedbackPost {
+  id          String   @id @default(cuid())
+  type        String   // "suggestion" or "issue"
+  title       String
+  description String
+  status      String   @default("open") // open, liked, in_progress, completed
+  upvotes     Int      @default(1) // starts at 1 (auto-upvoted by creator)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  comments    FeedbackComment[]
+  votes       FeedbackUpvote[]
+
+  @@index([type])
+}
+
+model FeedbackComment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  postId String
+  post   FeedbackPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+}
+
+model FeedbackUpvote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  postId String
+  post   FeedbackPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  userId String
+
+  @@unique([postId, userId])
+}
+

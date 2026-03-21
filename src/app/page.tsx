@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalculatorTab } from "@/components/calculator-tab";
 import { FishLogTab } from "@/components/fish-log-tab";
 import { FishPondTab } from "@/components/fish-pond-tab";
+import { FeedbackTab } from "@/components/feedback-tab";
 import { type FishEntry } from "@/lib/types";
 import {
   getServerEntries,
@@ -28,7 +29,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FooterSection } from "@/components/footer-section";
 
 const ACTIVE_TAB_KEY = "activeTab";
-const VALID_TABS = ["calculator", "log", "pond"];
+const VALID_TABS = ["calculator", "log", "pond", "feedback"];
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
@@ -175,6 +176,7 @@ export default function Home() {
                 <TabsTrigger value="calculator">Calculator</TabsTrigger>
                 <TabsTrigger value="log">Fish Log</TabsTrigger>
                 <TabsTrigger value="pond">Fish Pond</TabsTrigger>
+                <TabsTrigger value="feedback">Feedback</TabsTrigger>
               </TabsList>
               <GlobalSettingsBar />
             </div>
@@ -231,6 +233,10 @@ export default function Home() {
                   </CardContent>
                 </Card>
               )}
+            </TabsContent>
+
+            <TabsContent value="feedback">
+              <FeedbackTab loggedIn={!!user} onLoginClick={() => setShowLogin(true)} />
             </TabsContent>
           </Tabs>
         </SettingsProvider>
