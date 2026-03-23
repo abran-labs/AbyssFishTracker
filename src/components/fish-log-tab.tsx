@@ -27,6 +27,8 @@ import {
   IconChevronUp,
   IconChevronDown,
   IconSelector,
+  IconCopy,
+  IconCheck,
 } from "@tabler/icons-react";
 
 type SortKey =
@@ -108,6 +110,24 @@ function SortableHead({
 
 const MAX_POND = 18;
 
+const DISCORD_SEP = "> ---------------------------------------->";
+
+function buildEntryDiscordText(entry: FishEntry, baseValue: number, baseRoe: number | null): string {
+  const displayName = entry.fishName.replace(/ \((Head|Meat)\)$/, (_, dt) => ` ${dt}`);
+  const starLabel = entry.stars === 0 ? "Dead" : `${entry.stars} Star`;
+  const lines = [
+    `**${displayName}**`,
+    `**\`${entry.weight.toLocaleString()} kg\`** | **\`${starLabel}\`** | **\`${entry.mutation}\`**`,
+    DISCORD_SEP,
+    `> :moneybag: Base Sell: \`$${baseValue.toLocaleString()}\``,
+  ];
+  if (baseRoe !== null && baseRoe > 0) {
+    lines.push(`> :fish: Base Roe $/hour: \`$${baseRoe.toLocaleString()}\``);
+  }
+  lines.push(DISCORD_SEP);
+  return lines.join("\n");
+}
+
 export function FishLogTab({
   entries,
   onAdd,
@@ -128,6 +148,7 @@ export function FishLogTab({
   } | undefined>(undefined);
   const [sortKey, setSortKey] = React.useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = React.useState<SortDir>("desc");
+  const [copiedId, setCopiedId] = React.useState<string | null>(null);
   const { addToast, removeToast } = useToast();
 
   React.useEffect(() => {
@@ -369,7 +390,7 @@ export function FishLogTab({
                   <SortableHead label={valueLabel} sortKey="value" className="text-right" {...sortProps} />
                   <SortableHead label={roeLabel} sortKey="roePerHour" className="text-right" {...sortProps} />
                   <SortableHead label="Date" sortKey="createdAt" {...sortProps} />
-                  <TableHead className="w-24">Actions</TableHead>
+                  <TableHead className="w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -401,6 +422,23 @@ export function FishLogTab({
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            const baseValue = valueMap.get(entry.id) ?? 0;
+                            const fish = FISH_SPECIES.find((f) => f.name === entry.fishName.replace(/ \((Meat|Head)\)$/, ""));
+                            const hasMutation = entry.mutation !== "None";
+                            const baseRoe = fish && fish.pondable !== false
+                              ? calculateBaseRoePerHour(baseValue, hasMutation, fish.rarity)
+                              : null;
+                            navigator.clipboard.writeText(buildEntryDiscordText(entry, baseValue, baseRoe));
+                            setCopiedId(entry.id);
+                            setTimeout(() => setCopiedId(null), 2000);
+                          }}
+                        >
+                          {copiedId === entry.id ? <IconCheck className="h-4 w-4" /> : <IconCopy className="h-4 w-4" />}
+                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
