@@ -89,58 +89,236 @@ export async function deleteServerEntry(id: string): Promise<void> {
   if (!existing) throw new Error("Entry not found");
 
   await prisma.fishEntry.delete({ where: { id } });
+
+  // Remove deleted fish from all loadouts
+  const snapshots = await prisma.pondSnapshot.findMany({
+    where: { userId },
+  });
+  for (const snap of snapshots) {
+    if (snap.fishIds.includes(id)) {
+      await prisma.pondSnapshot.update({
+        where: { userId_loadoutIndex: { userId, loadoutIndex: snap.loadoutIndex } },
+        data: { fishIds: snap.fishIds.filter((fid) => fid !== id) },
+      });
+    }
+  }
 }
 
 export interface PondSnapshotData {
   fishIds: string[];
   pondSize: number;
+  loadoutIndex: number;
+  loadoutName: string | null;
   createdAt: string;
 }
 
-export async function getServerPondSnapshot(): Promise<PondSnapshotData | null> {
-  const { userId } = await requireUser();
-  const snapshot = await prisma.pondSnapshot.findUnique({
-    where: { userId },
-  });
-  if (!snapshot) return null;
+function toSnapshotData(row: {
+  fishIds: string[];
+  pondSize: number;
+  loadoutIndex: number;
+  loadoutName: string | null;
+  createdAt: Date;
+}): PondSnapshotData {
   return {
-    fishIds: snapshot.fishIds,
-    pondSize: snapshot.pondSize,
-    createdAt: snapshot.createdAt.toISOString(),
+    fishIds: row.fishIds,
+    pondSize: row.pondSize,
+    loadoutIndex: row.loadoutIndex,
+    loadoutName: row.loadoutName,
+    createdAt: row.createdAt.toISOString(),
   };
 }
 
+export async function getServerPondSnapshots(): Promise<PondSnapshotData[]> {
+  const { userId } = await requireUser();
+  const snapshots = await prisma.pondSnapshot.findMany({
+    where: { userId },
+    orderBy: { loadoutIndex: "asc" },
+  });
+  return snapshots.map(toSnapshotData);
+}
+
 export async function saveServerPondSnapshot(
+  loadoutIndex: number,
   fishIds: string[],
-  pondSize: number
+  pondSize: number,
+  loadoutName?: string
 ): Promise<PondSnapshotData> {
   const { userId } = await requireUser();
   const snapshot = await prisma.pondSnapshot.upsert({
-    where: { userId },
-    update: { fishIds, pondSize, createdAt: new Date() },
-    create: { userId, fishIds, pondSize },
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
+    update: {
+      fishIds,
+      pondSize,
+      createdAt: new Date(),
+      ...(loadoutName !== undefined ? { loadoutName } : {}),
+    },
+    create: {
+      userId,
+      fishIds,
+      pondSize,
+      loadoutIndex,
+      loadoutName: loadoutName ?? null,
+    },
   });
-  return {
-    fishIds: snapshot.fishIds,
-    pondSize: snapshot.pondSize,
-    createdAt: snapshot.createdAt.toISOString(),
-  };
+  return toSnapshotData(snapshot);
 }
 
 export async function saveServerPondSize(
   pondSize: number
+): Promise<PondSnapshotData[]> {
+  const { userId } = await requireUser();
+  await prisma.pondSnapshot.updateMany({
+    where: { userId },
+    data: { pondSize },
+  });
+  // Truncate fishIds for loadouts that now exceed the new pond size
+  const snapshots = await prisma.pondSnapshot.findMany({
+    where: { userId },
+    orderBy: { loadoutIndex: "asc" },
+  });
+  for (const snap of snapshots) {
+    if (snap.fishIds.length > pondSize) {
+      await prisma.pondSnapshot.update({
+        where: { userId_loadoutIndex: { userId, loadoutIndex: snap.loadoutIndex } },
+        data: { fishIds: snap.fishIds.slice(0, pondSize) },
+      });
+      snap.fishIds = snap.fishIds.slice(0, pondSize);
+    }
+  }
+  return snapshots.map(toSnapshotData);
+}
+
+export async function removeFishFromLoadout(
+  loadoutIndex: number,
+  fishId: string
 ): Promise<PondSnapshotData> {
   const { userId } = await requireUser();
-  const snapshot = await prisma.pondSnapshot.upsert({
-    where: { userId },
-    update: { pondSize },
-    create: { userId, fishIds: [], pondSize },
+  const snapshot = await prisma.pondSnapshot.findUnique({
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
   });
-  return {
-    fishIds: snapshot.fishIds,
-    pondSize: snapshot.pondSize,
-    createdAt: snapshot.createdAt.toISOString(),
-  };
+  if (!snapshot) throw new Error("Loadout not found");
+  const updated = await prisma.pondSnapshot.update({
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
+    data: {
+      fishIds: snapshot.fishIds.filter((id) => id !== fishId),
+      createdAt: new Date(),
+    },
+  });
+  return toSnapshotData(updated);
+}
+
+export async function moveFishBetweenLoadouts(
+  fishId: string,
+  fromIndex: number,
+  toIndex: number
+): Promise<{ from: PondSnapshotData; to: PondSnapshotData }> {
+  const { userId } = await requireUser();
+
+  // Remove from source
+  const source = await prisma.pondSnapshot.findUnique({
+    where: { userId_loadoutIndex: { userId, loadoutIndex: fromIndex } },
+  });
+  if (!source) throw new Error("Source loadout not found");
+  const updatedSource = await prisma.pondSnapshot.update({
+    where: { userId_loadoutIndex: { userId, loadoutIndex: fromIndex } },
+    data: {
+      fishIds: source.fishIds.filter((id) => id !== fishId),
+      createdAt: new Date(),
+    },
+  });
+
+  // Add to target (create if doesn't exist)
+  const target = await prisma.pondSnapshot.findUnique({
+    where: { userId_loadoutIndex: { userId, loadoutIndex: toIndex } },
+  });
+  const targetFishIds = target ? target.fishIds : [];
+  if (!targetFishIds.includes(fishId)) {
+    targetFishIds.push(fishId);
+  }
+  const updatedTarget = await prisma.pondSnapshot.upsert({
+    where: { userId_loadoutIndex: { userId, loadoutIndex: toIndex } },
+    update: { fishIds: targetFishIds, createdAt: new Date() },
+    create: {
+      userId,
+      loadoutIndex: toIndex,
+      fishIds: targetFishIds,
+      pondSize: source.pondSize,
+    },
+  });
+
+  return { from: toSnapshotData(updatedSource), to: toSnapshotData(updatedTarget) };
+}
+
+export async function renameLoadout(
+  loadoutIndex: number,
+  name: string
+): Promise<PondSnapshotData> {
+  if (loadoutIndex < 2 || loadoutIndex > 4) {
+    throw new Error("Only custom loadouts (3-5) can be renamed");
+  }
+  const { userId } = await requireUser();
+  // Use existing pond size from any of the user's snapshots
+  const existing = await prisma.pondSnapshot.findFirst({
+    where: { userId },
+    select: { pondSize: true },
+  });
+  const snapshot = await prisma.pondSnapshot.upsert({
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
+    update: { loadoutName: name },
+    create: {
+      userId,
+      loadoutIndex,
+      fishIds: [],
+      pondSize: existing?.pondSize ?? 6,
+      loadoutName: name,
+    },
+  });
+  return toSnapshotData(snapshot);
+}
+
+export async function addEntryAndToPond(
+  data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">,
+  loadoutIndex: number
+): Promise<{ entry: FishEntry; snapshot: PondSnapshotData }> {
+  const { userId } = await requireUser();
+
+  // Create the fish entry
+  const row = await prisma.fishEntry.create({
+    data: {
+      fishName: data.fishName,
+      weight: data.weight,
+      stars: data.stars,
+      mutation: data.mutation,
+      userId,
+    },
+  });
+
+  // Add to the loadout
+  const existing = await prisma.pondSnapshot.findUnique({
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
+  });
+  const fishIds = existing ? [...existing.fishIds, row.id] : [row.id];
+  // Use existing pond size, or look up from any other snapshot
+  let pondSize = existing?.pondSize;
+  if (!pondSize) {
+    const any = await prisma.pondSnapshot.findFirst({
+      where: { userId },
+      select: { pondSize: true },
+    });
+    pondSize = any?.pondSize ?? 6;
+  }
+  const snapshot = await prisma.pondSnapshot.upsert({
+    where: { userId_loadoutIndex: { userId, loadoutIndex } },
+    update: { fishIds, createdAt: new Date() },
+    create: {
+      userId,
+      loadoutIndex,
+      fishIds,
+      pondSize,
+    },
+  });
+
+  return { entry: toFishEntry(row), snapshot: toSnapshotData(snapshot) };
 }
 
 // --- User Settings ---

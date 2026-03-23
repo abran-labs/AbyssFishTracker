@@ -15,9 +15,13 @@ import {
   addServerEntry,
   updateServerEntry,
   deleteServerEntry,
-  getServerPondSnapshot,
+  getServerPondSnapshots,
   saveServerPondSnapshot,
   saveServerPondSize,
+  removeFishFromLoadout,
+  moveFishBetweenLoadouts,
+  addEntryAndToPond,
+  renameLoadout,
   type PondSnapshotData,
 } from "@/lib/fish-actions";
 import { subscribeToPendingCount, getPendingCount } from "@/lib/stat-tracker";
@@ -30,12 +34,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FooterSection } from "@/components/footer-section";
 
 const ACTIVE_TAB_KEY = "activeTab";
+const ACTIVE_LOADOUT_KEY = "activeLoadoutIndex";
 const VALID_TABS = ["calculator", "log", "pond", "guide", "feedback"];
 
 export default function Home() {
   const { user, loading, logout } = useAuth();
   const [entries, setEntries] = React.useState<FishEntry[]>([]);
-  const [pondSnapshot, setPondSnapshot] = React.useState<PondSnapshotData | null>(null);
+  const [pondSnapshots, setPondSnapshots] = React.useState<PondSnapshotData[]>([]);
+  const [activeLoadoutIndex, setActiveLoadoutIndex] = React.useState(0);
   const [mounted, setMounted] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState("calculator");
   const [fishCount, setFishCount] = React.useState<number | null>(null);
@@ -48,6 +54,11 @@ export default function Home() {
     const saved = localStorage.getItem(ACTIVE_TAB_KEY);
     if (saved && VALID_TABS.includes(saved)) {
       setActiveTab(saved);
+    }
+    const savedLoadout = localStorage.getItem(ACTIVE_LOADOUT_KEY);
+    if (savedLoadout !== null) {
+      const idx = parseInt(savedLoadout, 10);
+      if (idx >= 0 && idx <= 4) setActiveLoadoutIndex(idx);
     }
   }, []);
 
@@ -75,10 +86,10 @@ export default function Home() {
     if (loading) return;
 
     if (user) {
-      Promise.all([getServerEntries(), getServerPondSnapshot()]).then(
-        ([serverEntries, serverSnapshot]) => {
+      Promise.all([getServerEntries(), getServerPondSnapshots()]).then(
+        ([serverEntries, serverSnapshots]) => {
           setEntries(serverEntries);
-          setPondSnapshot(serverSnapshot);
+          setPondSnapshots(serverSnapshots);
           setMounted(true);
         }
       );
@@ -113,6 +124,13 @@ export default function Home() {
   const handleDeleteEntry = React.useCallback(async (id: string) => {
     await deleteServerEntry(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
+    // Server already cleaned up loadouts; sync local state
+    setPondSnapshots((prev) =>
+      prev.map((s) => ({
+        ...s,
+        fishIds: s.fishIds.filter((fid) => fid !== id),
+      }))
+    );
   }, []);
 
   const handleRestoreEntry = React.useCallback(async (entry: FishEntry) => {
@@ -120,14 +138,82 @@ export default function Home() {
     setEntries((prev) => [restored, ...prev]);
   }, []);
 
-  const handleUpdatePondSnapshot = React.useCallback(async (fishIds: string[], pondSize: number) => {
-    const snapshot = await saveServerPondSnapshot(fishIds, pondSize);
-    setPondSnapshot(snapshot);
+  const handleUpdatePondSnapshot = React.useCallback(async (loadoutIndex: number, fishIds: string[], pondSize: number) => {
+    const snapshot = await saveServerPondSnapshot(loadoutIndex, fishIds, pondSize);
+    setPondSnapshots((prev) => {
+      const existing = prev.find((s) => s.loadoutIndex === loadoutIndex);
+      if (existing) return prev.map((s) => (s.loadoutIndex === loadoutIndex ? snapshot : s));
+      return [...prev, snapshot].sort((a, b) => a.loadoutIndex - b.loadoutIndex);
+    });
   }, []);
 
   const handlePondSizeChange = React.useCallback(async (size: number) => {
-    const snapshot = await saveServerPondSize(size);
-    setPondSnapshot(snapshot);
+    const snapshots = await saveServerPondSize(size);
+    setPondSnapshots(snapshots);
+  }, []);
+
+  const handleLoadoutChange = React.useCallback((index: number) => {
+    setActiveLoadoutIndex(index);
+    localStorage.setItem(ACTIVE_LOADOUT_KEY, index.toString());
+  }, []);
+
+  const handleRemoveFromPond = React.useCallback(async (loadoutIndex: number, fishId: string) => {
+    const snapshot = await removeFishFromLoadout(loadoutIndex, fishId);
+    setPondSnapshots((prev) =>
+      prev.map((s) => (s.loadoutIndex === loadoutIndex ? snapshot : s))
+    );
+  }, []);
+
+  const handleMoveBetweenPonds = React.useCallback(async (fishId: string, fromIndex: number, toIndex: number) => {
+    const { from, to } = await moveFishBetweenLoadouts(fishId, fromIndex, toIndex);
+    setPondSnapshots((prev) => {
+      let updated = prev.map((s) => {
+        if (s.loadoutIndex === fromIndex) return from;
+        if (s.loadoutIndex === toIndex) return to;
+        return s;
+      });
+      // If target didn't exist before, add it
+      if (!prev.find((s) => s.loadoutIndex === toIndex)) {
+        updated = [...updated, to].sort((a, b) => a.loadoutIndex - b.loadoutIndex);
+      }
+      return updated;
+    });
+  }, []);
+
+  const handleSendToPond = React.useCallback(async (fishId: string, loadoutIndex: number) => {
+    // Add fish to a custom loadout (from fish log)
+    const existing = pondSnapshots.find((s) => s.loadoutIndex === loadoutIndex);
+    const fishIds = existing ? [...existing.fishIds, fishId] : [fishId];
+    const pondSize = existing?.pondSize ?? pondSnapshots[0]?.pondSize ?? 6;
+    const snapshot = await saveServerPondSnapshot(loadoutIndex, fishIds, pondSize);
+    setPondSnapshots((prev) => {
+      const found = prev.find((s) => s.loadoutIndex === loadoutIndex);
+      if (found) return prev.map((s) => (s.loadoutIndex === loadoutIndex ? snapshot : s));
+      return [...prev, snapshot].sort((a, b) => a.loadoutIndex - b.loadoutIndex);
+    });
+  }, [pondSnapshots]);
+
+  const handleAddEntryAndToPond = React.useCallback(async (
+    data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">,
+    loadoutIndex: number
+  ) => {
+    const { entry, snapshot } = await addEntryAndToPond(data, loadoutIndex);
+    setEntries((prev) => [entry, ...prev]);
+    setPondSnapshots((prev) => {
+      const found = prev.find((s) => s.loadoutIndex === loadoutIndex);
+      if (found) return prev.map((s) => (s.loadoutIndex === loadoutIndex ? snapshot : s));
+      return [...prev, snapshot].sort((a, b) => a.loadoutIndex - b.loadoutIndex);
+    });
+    return entry;
+  }, []);
+
+  const handleRenameLoadout = React.useCallback(async (loadoutIndex: number, name: string) => {
+    const snapshot = await renameLoadout(loadoutIndex, name);
+    setPondSnapshots((prev) => {
+      const found = prev.find((s) => s.loadoutIndex === loadoutIndex);
+      if (found) return prev.map((s) => (s.loadoutIndex === loadoutIndex ? snapshot : s));
+      return [...prev, snapshot].sort((a, b) => a.loadoutIndex - b.loadoutIndex);
+    });
   }, []);
 
   if (!mounted || loading) return null;
@@ -198,10 +284,12 @@ export default function Home() {
               {user ? (
                 <FishLogTab
                   entries={entries}
+                  pondSnapshots={pondSnapshots}
                   onAdd={handleAddEntry}
                   onUpdate={handleUpdateEntry}
                   onDelete={handleDeleteEntry}
                   onRestore={handleRestoreEntry}
+                  onSendToPond={handleSendToPond}
                 />
               ) : (
                 <Card>
@@ -222,9 +310,18 @@ export default function Home() {
               {user ? (
                 <FishPondTab
                   entries={entries}
-                  snapshot={pondSnapshot}
+                  pondSnapshots={pondSnapshots}
+                  activeLoadoutIndex={activeLoadoutIndex}
+                  onLoadoutChange={handleLoadoutChange}
                   onUpdateSnapshot={handleUpdatePondSnapshot}
                   onPondSizeChange={handlePondSizeChange}
+                  onRenameLoadout={handleRenameLoadout}
+                  onRemoveFromPond={handleRemoveFromPond}
+                  onMoveBetweenPonds={handleMoveBetweenPonds}
+                  onAdd={handleAddEntryAndToPond}
+                  onUpdate={handleUpdateEntry}
+                  onDeleteEntry={handleDeleteEntry}
+                  onRestore={handleRestoreEntry}
                 />
               ) : (
                 <Card>

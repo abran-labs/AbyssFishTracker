@@ -1,4 +1,4 @@
-import { FishSpecies, GlobalSettings } from "./types";
+import { FishSpecies, FishEntry, GlobalSettings } from "./types";
 import { FISH_SPECIES, MUTATIONS, STAR_LEVELS, CYCLE_TIMES, ARTIFACTS, RACES, DECORATION_LEVELS } from "./fish-config";
 
 export function calculateValue(
@@ -125,4 +125,54 @@ export function calculateBoostedRoePerHour(
   const offlineMultiplier = isOffline ? 0.5 : 1.0;
 
   return Math.round(baseRoePerHour * cashMultiplier * speedMultiplier * offlineMultiplier);
+}
+
+/**
+ * Compute the ideal pond for a given optimization mode.
+ * "roe" = sort by base roe $/hr descending (existing behavior).
+ * "balanced" = 70% roe $/hr + 30% storage efficiency ($/hr per kg/hr).
+ */
+export function computeIdealPond(
+  entries: FishEntry[],
+  pondSize: number,
+  mode: "roe" | "balanced"
+): FishEntry[] {
+  if (mode === "roe") {
+    return [...entries]
+      .sort((a, b) => {
+        const aFish = FISH_SPECIES.find((f) => f.name === a.fishName);
+        const bFish = FISH_SPECIES.find((f) => f.name === b.fishName);
+        const aRoe = aFish ? calculateBaseRoePerHour(computeEntryValue(a), a.mutation !== "None", aFish.rarity) : 0;
+        const bRoe = bFish ? calculateBaseRoePerHour(computeEntryValue(b), b.mutation !== "None", bFish.rarity) : 0;
+        return bRoe - aRoe;
+      })
+      .slice(0, pondSize);
+  }
+
+  // Balanced mode: 70% normalized roe + 30% normalized efficiency
+  const scored = entries.map((entry) => {
+    const baseName = entry.fishName.replace(/ \((Meat|Head)\)$/, "");
+    const fish = FISH_SPECIES.find((f) => f.name === baseName);
+    if (!fish) return { entry, roePerHour: 0, efficiency: 0 };
+
+    const value = computeEntryValue(entry);
+    const roePerHour = calculateBaseRoePerHour(value, entry.mutation !== "None", fish.rarity);
+    const cycleTime = CYCLE_TIMES[fish.rarity] ?? 600;
+    const kgPerHour = entry.weight * 0.02 * (3600 / cycleTime);
+    const efficiency = kgPerHour > 0 ? roePerHour / kgPerHour : 0;
+
+    return { entry, roePerHour, efficiency };
+  });
+
+  const maxRoe = Math.max(...scored.map((s) => s.roePerHour), 1);
+  const maxEfficiency = Math.max(...scored.map((s) => s.efficiency), 1);
+
+  return scored
+    .map((s) => ({
+      entry: s.entry,
+      score: 0.7 * (s.roePerHour / maxRoe) + 0.3 * (s.efficiency / maxEfficiency),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, pondSize)
+    .map((s) => s.entry);
 }

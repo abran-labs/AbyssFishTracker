@@ -5,6 +5,7 @@ import { FishForm, type FishFormData } from "@/components/fish-form";
 import { ImagePasteZone } from "@/components/image-paste-zone";
 import { type OcrResult } from "@/lib/ocr";
 import { type FishEntry } from "@/lib/types";
+import { type PondSnapshotData } from "@/lib/fish-actions";
 import { MUTATIONS, FISH_SPECIES, getRarityColor, MUTATION_COLORS, STAR_COLOR, getWeightColor, getRankColor, getValueColor, RACES, ARTIFACTS, DECORATION_LEVELS } from "@/lib/fish-config";
 import { calculateBaseRoePerHour, computeEntryValue } from "@/lib/fish-utils";
 import { useSettings } from "@/components/settings-context";
@@ -29,6 +30,7 @@ import {
   IconSelector,
   IconCopy,
   IconCheck,
+  IconArrowRight,
 } from "@tabler/icons-react";
 
 type SortKey =
@@ -57,8 +59,21 @@ const mutationMultiplierMap = new Map(
   MUTATIONS.map((m) => [m.name, m.multiplier])
 );
 
+const FISH_LOG_SUBTAB_KEY = "fishLogSubTab";
+
+const LOADOUT_NAMES: Record<number, string> = {
+  0: "ROE $/hr Optimized",
+  1: "Balanced $/hr + kg/hr",
+};
+
+function getLoadoutName(index: number, snapshot?: PondSnapshotData | null): string {
+  if (index <= 1) return LOADOUT_NAMES[index];
+  return snapshot?.loadoutName || `Custom Loadout ${index - 1}`;
+}
+
 interface FishLogTabProps {
   entries: FishEntry[];
+  pondSnapshots: PondSnapshotData[];
   onAdd: (
     data: Omit<FishEntry, "id" | "createdAt" | "updatedAt">
   ) => FishEntry | Promise<FishEntry>;
@@ -68,6 +83,7 @@ interface FishLogTabProps {
   ) => FishEntry | Promise<FishEntry>;
   onDelete: (id: string) => void | Promise<void>;
   onRestore: (entry: FishEntry) => void | Promise<void>;
+  onSendToPond: (fishId: string, loadoutIndex: number) => Promise<void>;
 }
 
 function SortableHead({
@@ -130,11 +146,20 @@ function buildEntryDiscordText(entry: FishEntry, baseValue: number, baseRoe: num
 
 export function FishLogTab({
   entries,
+  pondSnapshots,
   onAdd,
   onUpdate,
   onDelete,
   onRestore,
+  onSendToPond,
 }: FishLogTabProps) {
+  const [subTab, setSubTab] = React.useState<"active" | "archive">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(FISH_LOG_SUBTAB_KEY);
+      if (saved === "active" || saved === "archive") return saved;
+    }
+    return "active";
+  });
   const [modalOpen, setModalOpen] = React.useState(false);
   const [editingEntry, setEditingEntry] = React.useState<FishEntry | null>(
     null
@@ -149,7 +174,13 @@ export function FishLogTab({
   const [sortKey, setSortKey] = React.useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = React.useState<SortDir>("desc");
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
+  const [sendToPondId, setSendToPondId] = React.useState<string | null>(null);
   const { addToast, removeToast } = useToast();
+
+  const handleSubTabChange = (tab: "active" | "archive") => {
+    setSubTab(tab);
+    localStorage.setItem(FISH_LOG_SUBTAB_KEY, tab);
+  };
 
   React.useEffect(() => {
     if (modalOpen) {
@@ -360,23 +391,191 @@ export function FishLogTab({
     onSort: handleSort,
   };
 
+  // Build active tab data: fish grouped by loadout, sorted by current sort
+  const activeTabData = React.useMemo(() => {
+    return pondSnapshots
+      .filter((snap) => snap.fishIds.length > 0)
+      .sort((a, b) => a.loadoutIndex - b.loadoutIndex)
+      .map((snap) => {
+        const idSet = new Set(snap.fishIds);
+        return {
+          snapshot: snap,
+          name: getLoadoutName(snap.loadoutIndex, snap),
+          fish: displayEntries.filter((e) => idSet.has(e.id)),
+        };
+      });
+  }, [pondSnapshots, displayEntries]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold">Fish Log</h2>
+        <div className="flex items-center gap-4">
+          <h2 className="text-lg font-semibold">Fish Log</h2>
+          <div className="flex gap-1 bg-secondary/50 p-1 rounded-lg">
+            <button
+              onClick={() => handleSubTabChange("active")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${subTab === "active"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => handleSubTabChange("archive")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-colors ${subTab === "archive"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Archive
+            </button>
+          </div>
+        </div>
         <Button onClick={openAdd}>
           <IconPlus className="h-4 w-4 mr-2" />
           Add Entry
         </Button>
       </div>
 
-      {entries.length === 0 ? (
+      {/* Active subtab: fish grouped by loadout */}
+      {subTab === "active" && (
+        activeTabData.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center text-muted-foreground">
+              No fish in any pond loadout yet. Go to the Fish Pond tab to set up your pond!
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {activeTabData.map(({ snapshot: snap, name, fish }) => (
+              <Card key={snap.loadoutIndex}>
+                <CardContent className="p-0">
+                  <div className="px-4 py-3 border-b">
+                    <h3 className="text-sm font-semibold">{name} ({fish.length}/{snap.pondSize})</h3>
+                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <SortableHead label="Rank" sortKey="rank" className="w-16" {...sortProps} />
+                        <SortableHead label="Fish" sortKey="fishName" {...sortProps} />
+                        <SortableHead label="Weight" sortKey="weight" {...sortProps} />
+                        <SortableHead label="Stars" sortKey="stars" {...sortProps} />
+                        <SortableHead label="Mutation" sortKey="mutation" {...sortProps} />
+                        <SortableHead label={valueLabel} sortKey="value" className="text-right" {...sortProps} />
+                        <SortableHead label={roeLabel} sortKey="roePerHour" className="text-right" {...sortProps} />
+                        <TableHead className="w-32">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {fish.map((entry) => (
+                        <TableRow key={entry.id}>
+                          <TableCell className="font-medium" style={{ color: getRankColor(rankMap.get(entry.id) ?? 0) }}>
+                            #{rankMap.get(entry.id)}
+                          </TableCell>
+                          <TableCell style={{ color: getRarityColor(entry.fishName) }}>
+                            {entry.fishName}
+                          </TableCell>
+                          <TableCell style={{ color: getWeightColor(entry.weight, entry.fishName, entry.mutation) }}>
+                            {entry.weight}kg
+                          </TableCell>
+                          <TableCell style={entry.stars > 0 ? { color: STAR_COLOR } : undefined}>
+                            {entry.stars === 0 ? "Dead" : `${entry.stars}\u2605`}
+                          </TableCell>
+                          <TableCell style={MUTATION_COLORS[entry.mutation] ? { color: MUTATION_COLORS[entry.mutation] } : undefined}>
+                            {entry.mutation}
+                          </TableCell>
+                          <TableCell className="text-right font-medium" style={{ color: getValueColor(Math.round((valueMap.get(entry.id) ?? 0) * (cashBonus + 1)), allValues) }}>
+                            ${Math.round((valueMap.get(entry.id) ?? 0) * (cashBonus + 1)).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-medium" style={{ color: getValueColor(roeMap.get(entry.id) ?? 0, [...roeMap.values()]) }}>
+                            ${(roeMap.get(entry.id) ?? 0).toLocaleString()}/hr
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const baseValue = valueMap.get(entry.id) ?? 0;
+                                  const fish = FISH_SPECIES.find((f) => f.name === entry.fishName.replace(/ \((Meat|Head)\)$/, ""));
+                                  const hasMutation = entry.mutation !== "None";
+                                  const baseRoe = fish && fish.pondable !== false
+                                    ? calculateBaseRoePerHour(baseValue, hasMutation, fish.rarity)
+                                    : null;
+                                  navigator.clipboard.writeText(buildEntryDiscordText(entry, baseValue, baseRoe));
+                                  setCopiedId(entry.id);
+                                  setTimeout(() => setCopiedId(null), 2000);
+                                }}
+                              >
+                                {copiedId === entry.id ? <IconCheck className="h-4 w-4" /> : <IconCopy className="h-4 w-4" />}
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => openEdit(entry)}>
+                                <IconEdit className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDelete(entry)}>
+                                <IconTrash className="h-4 w-4" />
+                              </Button>
+                              <div className="relative">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => setSendToPondId(sendToPondId === entry.id ? null : entry.id)}
+                                >
+                                  <IconArrowRight className="h-4 w-4" />
+                                </Button>
+                                {sendToPondId === entry.id && (
+                                  <div className="absolute right-0 top-full mt-1 z-50 bg-popover border rounded-md shadow-md p-1 min-w-[180px]">
+                                    {[2, 3, 4].map((i) => {
+                                      const s = pondSnapshots.find((ps) => ps.loadoutIndex === i);
+                                      const count = s?.fishIds.length ?? 0;
+                                      const size = s?.pondSize ?? pondSnapshots[0]?.pondSize ?? 18;
+                                      const isFull = count >= size;
+                                      const alreadyIn = s?.fishIds.includes(entry.id) ?? false;
+                                      return (
+                                        <button
+                                          key={i}
+                                          disabled={isFull || alreadyIn}
+                                          className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                                          onClick={async () => {
+                                            await onSendToPond(entry.id, i);
+                                            setSendToPondId(null);
+                                            addToast({
+                                              variant: "success",
+                                              title: "Added to Pond",
+                                              description: `${entry.fishName} added to ${getLoadoutName(i, s)}.`,
+                                            });
+                                          }}
+                                        >
+                                          {getLoadoutName(i, s)} ({count}/{size})
+                                          {alreadyIn && " (already in)"}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )
+      )}
+
+      {/* Archive subtab: full fish log */}
+      {subTab === "archive" && entries.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-muted-foreground">
             No fish logged yet. Add your first catch!
           </CardContent>
         </Card>
-      ) : (
+      ) : subTab === "archive" ? (
         <Card>
           <CardContent className="p-0">
             <Table>
@@ -389,7 +588,6 @@ export function FishLogTab({
                   <SortableHead label="Mutation" sortKey="mutation" {...sortProps} />
                   <SortableHead label={valueLabel} sortKey="value" className="text-right" {...sortProps} />
                   <SortableHead label={roeLabel} sortKey="roePerHour" className="text-right" {...sortProps} />
-                  <SortableHead label="Date" sortKey="createdAt" {...sortProps} />
                   <TableHead className="w-32">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -416,9 +614,6 @@ export function FishLogTab({
                     </TableCell>
                     <TableCell className="text-right font-medium" style={{ color: getValueColor(roeMap.get(entry.id) ?? 0, [...roeMap.values()]) }}>
                       ${(roeMap.get(entry.id) ?? 0).toLocaleString()}/hr
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(entry.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
@@ -453,6 +648,45 @@ export function FishLogTab({
                         >
                           <IconTrash className="h-4 w-4" />
                         </Button>
+                        <div className="relative">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setSendToPondId(sendToPondId === entry.id ? null : entry.id)}
+                          >
+                            <IconArrowRight className="h-4 w-4" />
+                          </Button>
+                          {sendToPondId === entry.id && (
+                            <div className="absolute right-0 top-full mt-1 z-50 bg-popover border rounded-md shadow-md p-1 min-w-[180px]">
+                              {[2, 3, 4].map((i) => {
+                                const snap = pondSnapshots.find((s) => s.loadoutIndex === i);
+                                const count = snap?.fishIds.length ?? 0;
+                                const size = snap?.pondSize ?? pondSnapshots[0]?.pondSize ?? 18;
+                                const isFull = count >= size;
+                                const alreadyIn = snap?.fishIds.includes(entry.id) ?? false;
+                                return (
+                                  <button
+                                    key={i}
+                                    disabled={isFull || alreadyIn}
+                                    className="w-full text-left px-3 py-1.5 text-sm rounded hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed"
+                                    onClick={async () => {
+                                      await onSendToPond(entry.id, i);
+                                      setSendToPondId(null);
+                                      addToast({
+                                        variant: "success",
+                                        title: "Added to Pond",
+                                        description: `${entry.fishName} added to ${getLoadoutName(i, snap)}.`,
+                                      });
+                                    }}
+                                  >
+                                    {getLoadoutName(i, snap)} ({count}/{size})
+                                    {alreadyIn && " (already in)"}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -461,7 +695,9 @@ export function FishLogTab({
             </Table>
           </CardContent>
         </Card>
-      )}
+      ) : null}
+
+      {sendToPondId && <div className="fixed inset-0 z-40" onClick={() => setSendToPondId(null)} />}
 
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
